@@ -1250,44 +1250,37 @@ function stampaBrowser(items, tname, covers) {
     });
     if (!miei.length) return;
     var label = stazione === 'cucina' ? '*** CUCINA ***' : stazione === 'pizzeria' ? '*** PIZZERIA ***' : '*** POLLERIA ***';
-    var righe = '';
+    var testo = label + '
+';
+    testo += tname.toUpperCase() + '
+';
+    testo += covers + ' coperti
+';
+    testo += ora + ' - ' + data + '
+';
+    testo += '--------------------------------
+';
     miei.forEach(function(it) {
-      righe += '<tr>';
-      righe += '<td style="font-size:14px;font-weight:bold;padding:4px 2px;vertical-align:top">x' + (it.qty || 1) + '</td>';
-      righe += '<td style="font-size:14px;font-weight:bold;padding:4px 0 4px 6px;vertical-align:top;text-transform:uppercase">' + it.name.toUpperCase();
-      if (it.note) righe += '<br><em style="font-size:11px;font-weight:normal">' + it.note + '</em>';
-      righe += '</td></tr>';
+      testo += 'x' + (it.qty || 1) + '  ' + it.name.toUpperCase() + '
+';
+      if (it.note) testo += '    -> ' + it.note + '
+';
     });
-    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
-    html += '<style>';
-    html += 'body{font-family:monospace;width:280px;margin:0;padding:10px;color:#000;background:#fff}';
-    html += '.st{background:#000;color:#fff;text-align:center;font-size:14px;font-weight:bold;padding:5px;letter-spacing:2px;margin-bottom:6px}';
-    html += '.tn{text-align:center;font-size:18px;font-weight:bold}';
-    html += '.nf{text-align:center;font-size:11px;margin-top:2px}';
-    html += 'hr{border:none;border-top:1px dashed #000;margin:8px 0}';
-    html += 'table{width:100%;border-collapse:collapse}';
-    html += '.ft{text-align:center;font-size:11px;margin-top:6px}';
-    html += '@media print{body{margin:0;padding:5px}}';
-    html += '</style></head><body>';
-
-```
-html += '<div class="st">' + label + '</div>';
-html += '<div class="tn">' + tname.toUpperCase() + '</div>';
-html += '<div class="nf">' + covers + ' coperti</div>';
-html += '<div class="nf">' + ora + ' - ' + data + '</div>';
-html += '<hr><table>' + righe + '</table><hr>';
-html += '<div class="ft">*** ORDINE RICEVUTO ***<br>Saverio Pizza e Pollo</div>';
-html += '</body></html>';
-var blob = new Blob([html], {type: 'text/html'});
-var url = URL.createObjectURL(blob);
-var a = document.createElement('a');
-a.href = url;
-a.target = '_blank';
-a.click();
-setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
-```
-
-});
+    testo += '--------------------------------
+';
+    testo += '*** ORDINE RICEVUTO ***
+';
+    testo += 'Saverio Pizza e Pollo
+';
+    if (navigator.share) {
+      navigator.share({
+        title: label + ' - ' + tname,
+        text: testo
+      }).catch(function(e) { console.log('Share cancelled'); });
+    } else {
+      alert(testo);
+    }
+  });
 }
 </script>
 
