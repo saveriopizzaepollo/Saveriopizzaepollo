@@ -799,7 +799,7 @@ function renderOrderPanel(){
         <div class="section-title">🛒 ${hasExisting&&status!=='paid'?'Aggiunte':'Ordine corrente'}</div>
         ${renderCurrentOrder(tempOrder)}
         <div class="order-actions">
-          ${tempOrder.length&&status!=='paid'?`<button class="btn btn-primary" onclick="sendOrder()">📤 ${hasExisting?'Invia Aggiunta':'Invia Ordine'}</button><button class="btn btn-success btn-sm" onclick="stampaBrowser(getDraft(selectedTable),tables[selectedTable]?.name||'',tables[selectedTable]?.covers||1)">📤🖨️ Invia e Stampa</button>`:''}
+          ${tempOrder.length&&status!=='paid'?`<button class="btn btn-primary" onclick="sendOrder()">📤 ${hasExisting?'Invia Aggiunta':'Invia Ordine'}</button><button class="btn btn-success btn-sm" onclick="sendAndPrint()">📤🖨️ Invia e Stampa</button>`:''}
           <button class="btn btn-secondary" onclick="goTables()">← Tavoli</button>
           ${ord&&ord.items?`<button class="btn btn-warning btn-sm" onclick="openMerge('${selectedTable}')">🔗 Unisci</button><button class="btn btn-secondary btn-sm" onclick="openMove('${selectedTable}')">↔️ Sposta</button>`:''}
         </div>
@@ -900,6 +900,14 @@ window.sendOrder=async function(){
   goTables();
 };
 
+window.sendAndPrint=async function(){
+  const draft=getDraft(selectedTable);
+  if(!draft.length){showToast('Aggiungi almeno un articolo!');return;}
+  const tname=tables[selectedTable]?.name||selectedTable;
+  const covers=tables[selectedTable]?.covers||1;
+  await sendOrder();
+  stampaBrowser(draft,tname,covers);
+};
 window.openEditTableModal=function(tid){editingTableId=tid;const t=tables[tid]||{};document.getElementById('etName').value=t.name||'';document.getElementById('etCovers').value=t.covers||4;document.getElementById('etNote').value=t.note||'';openModal('editTableModal');};
 window.saveEditTable=async function(){const name=document.getElementById('etName').value.trim(),covers=parseInt(document.getElementById('etCovers').value)||4,note=document.getElementById('etNote').value.trim();if(!name)return;await update(ref(db,`tables/${editingTableId}`),{name,covers,note});closeModal('editTableModal');showToast('Tavolo aggiornato');};
 window.addTable=async function(){const name=prompt('Nome tavolo:',`Tavolo ${Object.keys(tables).length+1}`);if(!name)return;const covers=parseInt(prompt('Coperti:','4'))||4;await set(ref(db,`tables/t${Date.now()}`),{name,covers,note:''});showToast('Tavolo aggiunto');};
