@@ -575,9 +575,51 @@ async function requestWakeLock(){try{if('wakeLock' in navigator){wakeLock=await 
 function releaseWakeLock(){try{if(wakeLock){wakeLock.release();wakeLock=null;}}catch(e){}}
 
 // ── TIMER ──────────────────────────────────────────────────────
-function getTableTimer(ts){if(!ts)return null;const m=Math.floor((Date.now()-ts)/60000);const h=Math.floor(m/60);const min=m%60;const label=h>0?`${h}h ${min}m`:`${m} min`;const cls=m<60?'timer-green':m<120?'timer-yellow':'timer-red';return{label,cls};}
-function startTimerRefresh(){if(timerInterval)clearInterval(timerInterval);timerInterval=setInterval(()=>{if(currentRole==='cameriere')refreshTimers();},60000);}
-function refreshTimers(){document.querySelectorAll('.table-card[data-tid]').forEach(card=>{const tid=card.getAttribute('data-tid');const ord=orders[tid];if(!ord||!ord.timestamp)return;const t=getTableTimer(ord.timestamp);if(!t)return;const el=card.querySelector('.t-timer');if(el){el.className=`t-timer ${t.cls}`;el.textContent=`⏱ ${t.label}`;}});}
+function formatTimer(ts){
+  if(!ts)return{label:'00:00',cls:'timer-green'};
+  const total=Math.floor((Date.now()-ts)/1000);
+  const h=Math.floor(total/3600);
+  const m=Math.floor((total%3600)/60);
+  const s=total%60;
+  const label=h>0?h+':'+String(m).padStart(2,'0'):String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const cls=total<3600?'timer-green':total<7200?'timer-yellow':'timer-red';
+  return{label,cls};
+}
+function getTableTimer(ts){return ts?formatTimer(ts):null;}
+function startTimerRefresh(){
+  if(timerInterval)clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    if(currentRole==='cameriere')refreshTimers();
+    else if(currentRole==='cucina'||currentRole==='pizzeria'||currentRole==='polleria')refreshKitchenTimers();
+  },1000);
+}
+function refreshKitchenTimers(){
+  document.querySelectorAll('.kc-timer').forEach(el=>{
+    const tid=el.closest('[data-tid]')?.getAttribute('data-tid');
+    if(!tid)return;
+    const ord=orders[tid];if(!ord||!ord.timestamp)return;
+    const t=getTimerLabel(ord.timestamp);
+    el.className='kc-timer '+t.cls;
+    el.textContent=t.label;
+  });
+  document.querySelectorAll('.servito-timer').forEach(el=>{
+    const ts=parseInt(el.getAttribute('data-ts'));
+    if(!ts)return;
+    const total=Math.floor((Date.now()-ts)/1000);
+    const m=Math.floor(total/60);
+    const s=total%60;
+    el.textContent='⏱ '+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+' fa';
+  });
+}
+function refreshTimers(){
+  document.querySelectorAll('.table-card[data-tid]').forEach(card=>{
+    const tid=card.getAttribute('data-tid');
+    const ord=orders[tid];if(!ord||!ord.timestamp)return;
+    const t=getTableTimer(ord.timestamp);if(!t)return;
+    const el=card.querySelector('.t-timer');
+    if(el){el.className='t-timer '+t.cls;el.textContent='⏱ '+t.label;}
+  });
+}
 
 // ── UTILS ──────────────────────────────────────────────────────
 async function initFirebase(){
@@ -591,7 +633,16 @@ function stopAll(){unsubFns.forEach(u=>u());unsubFns=[];if(timerInterval){clearI
 function fmt(n){return '€'+Number(n).toFixed(2).replace('.',',');}
 function showToast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 function showProductToast(msg){const t=document.getElementById('productToast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
-function getTimerLabel(ts){if(!ts)return{label:'—',cls:'t-green'};const m=Math.floor((Date.now()-ts)/60000);if(m<10)return{label:`${m} min`,cls:'t-green'};if(m<20)return{label:`${m} min`,cls:'t-yellow'};return{label:`${m} min ⚠️`,cls:'t-red'};}
+function getTimerLabel(ts){
+  if(!ts)return{label:'00:00',cls:'t-green'};
+  const total=Math.floor((Date.now()-ts)/1000);
+  const h=Math.floor(total/3600);
+  const m=Math.floor((total%3600)/60);
+  const s=total%60;
+  const label=h>0?h+':'+String(m).padStart(2,'0'):String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const cls=total<600?'t-green':total<1200?'t-yellow':'t-red';
+  return{label,cls};
+}
 function getStatusLabel(s){return{free:'Libero',pending:'⏳ In attesa',ready:'✅ Pronto',paid:'💰 Pagato',reserved:'📅 Prenotato'}[s]||s;}
 function isGlutenFree(catId){return(menuData[catId]?.label||'').toUpperCase().includes('GLUTEN');}
 function isGlutenFreeItem(item){return !!(item&&item.glutenFree);}
@@ -608,13 +659,14 @@ function getStationCirclesHtml(ord,tid){
     const state=sc[role]||'';
     const hasRole=role==='cucina'?hasCucina:role==='pizzeria'?hasPizzeria:hasPolleria;
     const cls=hasRole?(state==='green'?'active-green':state==='yellow'?'active-yellow':state==='red'?'active-red':'active-white'):'active-white';
-    const clickable=(state==='yellow'&&hasRole)?`onclick="serveStation('${tid}','${role}')" title="Segna come servito"`:'';
+    const clickable=(state==='yellow'&&hasRole)?`onclick="serveStation('${tid}','${role}',event)" title="Segna come servito"`:'';
     return`<div class="station-circle-wrap"><div class="station-circle ${cls}" ${clickable}>${icon}</div><div class="station-circle-label">${label}</div></div>`;
   };
   return`<div class="station-circles">${makeCircle('cucina','🍽️','Cucina')}${makeCircle('pizzeria','🍕','Pizzeria')}${makeCircle('polleria','🍗','Polleria')}</div>`;
 }
 
-window.serveStation=async function(tid,role){
+window.serveStation=async function(tid,role,event){
+  if(event){event.stopPropagation();event.preventDefault();}
   const ord=orders[tid];if(!ord)return;
   const sc=ord.stationColors||{};sc[role]='red';
   const update_data={stationColors:sc};
@@ -637,6 +689,7 @@ function updateCartBadge(){
 window.scrollToOrder=function(){const el=document.querySelector('.order-list')||document.querySelector('.order-actions');if(el)el.scrollIntoView({behavior:'smooth'});};
 
 window.selectRole=async function(role){
+  if(role==='cameriere'){camTab='tables';selectedTable=null;}
   currentRole=role;
   document.getElementById('splash').style.display='none';
   document.getElementById('app').style.display='flex';
@@ -699,7 +752,7 @@ window.selectRole=async function(role){
     }
     if(chatOpen)renderChatMsgs();
   });
-  if(role==='cameriere')startTimerRefresh();
+  startTimerRefresh();
   renderRole();
 };
 
@@ -794,7 +847,8 @@ function renderOrderPanel(){
           ${t.note?`<div style="font-size:.8rem;color:#4a5568;margin-top:2px">📝 ${t.note}</div>`:''}
         </div>
         <div style="display:flex;gap:7px;flex-wrap:wrap">
-          <button class="btn btn-secondary btn-sm" onclick="openEditTableModal('${selectedTable}')">✏️ Tavolo</button>
+          <button class="btn btn-secondary btn-sm" onclick="goTables()">← INDIETRO</button>
+          <button class="btn btn-secondary btn-sm" onclick="openEditTableModal('${selectedTable}')">✏️</button>
           <button class="btn btn-purple btn-sm" onclick="openReservation('${selectedTable}')">📅</button>
           ${ord&&ord.status!=='paid'?`<button class="btn btn-danger btn-sm" onclick="clearTable()">🗑️</button>`:''}
         </div>
@@ -974,7 +1028,7 @@ function renderStationContent(role){
     const isReady=myState==='yellow';
     const timer=getTimerLabel(ord.timestamp);
     const cls=isDone?'k-done':isReady?'k-ready':timer.cls==='t-red'?'k-urgent':'';
-    return`<div class="kcard ${cls}">
+    return`<div class="kcard ${cls}" data-tid="${tid}">
       ${isDone?`<div class="kcard-done-overlay"><div class="kcard-done-x">✕</div></div>`:''}
       <div class="kc-head">
         <span class="kc-tname">${ord.tableName||tid} <span style="font-size:.85rem;font-weight:600;color:#4a5568">👥${ord.covers||''}</span></span>
@@ -998,7 +1052,7 @@ function renderStationContent(role){
             const isServed=sc2[dest]==='red';
             const servedAt=dest==='cucina'?ord.cucinaServitoAt:null;
             const minAgo=servedAt?Math.floor((Date.now()-servedAt)/60000):0;
-            const timerServed=servedAt?`<span style="font-size:.78rem;font-weight:800;color:#e53e3e;margin-left:8px">⏱ ${minAgo} min fa</span>`:'';
+            const timerServed=servedAt?`<span class="servito-timer" data-ts="${servedAt}" style="font-size:.78rem;font-weight:800;color:#e53e3e;margin-left:8px">⏱ ${String(Math.floor((Date.now()-servedAt)/60000)).padStart(2,"0")}:${String(Math.floor(((Date.now()-servedAt)/1000)%60)).padStart(2,"0")} fa</span>`:'';
             return `<div style="position:relative;margin-top:8px">
               <div class="kc-other-title">${destLabel[dest]||dest}</div>
               ${gitems.map(it=>`<div class="kc-item dim" style="${it.glutenFree?'color:#22c55e':''}">${it.qty>1?`×${it.qty} `:''}${it.name.toUpperCase()}${it.note?`<span class="kc-item-note">📝 ${it.note}</span>`:''}</div>`).join('')}
