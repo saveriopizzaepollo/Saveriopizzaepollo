@@ -54,7 +54,7 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 .cart-badge-fixed{position:fixed;bottom:24px;right:20px;background:#1a9bbb;color:#1a202c;border-radius:50px;padding:12px 20px;font-weight:900;font-size:1rem;box-shadow:0 4px 20px rgba(26,155,187,.35);z-index:500;display:none;align-items:center;gap:8px;border:2px solid #0e7a9a;cursor:pointer;transition:all .2s}
 .cart-badge-fixed:hover{transform:scale(1.05)}
 .cart-count{background:#e53e3e;color:#ffffff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:900}
-.product-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:#276749;color:#ffffff;padding:12px 24px;border-radius:40px;font-weight:800;font-size:.95rem;z-index:9998;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
+.product-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:#22c55e;color:#ffffff;padding:12px 24px;border-radius:40px;font-weight:800;font-size:.95rem;z-index:9998;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
 .product-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 .tabs{display:flex;background:#ffffff;border-bottom:2.5px solid #b8e4f0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -108,8 +108,8 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 .cat-btn{padding:12px 20px;border-radius:24px;border:2.5px solid #b8e4f0;background:#ffffff;cursor:pointer;font-family:“Nunito”,sans-serif;font-weight:800;font-size:1rem;color:#2d3748;transition:all .15s}
 .cat-btn.active{background:#1a9bbb;border-color:#1a9bbb;color:#1a202c}
 .cat-btn:hover{border-color:#1a9bbb}
-.cat-btn.gf-cat{border-color:#276749;color:#276749;font-weight:900}
-.cat-btn.gf-cat.active{background:#276749;border-color:#276749;color:#ffffff}
+.cat-btn.gf-cat{border-color:#22c55e;color:#22c55e;font-weight:900}
+.cat-btn.gf-cat.active{background:#22c55e;border-color:#22c55e;color:#ffffff}
 
 .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:400px;overflow-y:auto;padding-right:3px}
 @media(max-width:500px){.menu-grid{grid-template-columns:1fr}}
@@ -121,10 +121,10 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 .mi-name{font-weight:900;font-size:1.1rem;color:#0e7a9a;text-transform:uppercase;letter-spacing:.3px}
 .mi-desc{font-size:.85rem;color:#2d3748;line-height:1.4;margin-top:3px}
 .mi-price{font-weight:900;color:#0e7a9a;font-size:1.05rem;margin-top:5px}
-.menu-item.gf-item{border-color:#276749;background:#f0fff4}
-.menu-item.gf-item:hover{background:#c6f6d5;border-color:#276749}
-.menu-item.gf-item .mi-name{color:#276749}
-.menu-item.gf-item .mi-price{color:#276749}
+.menu-item.gf-item{border-color:#22c55e;background:#f0fff4}
+.menu-item.gf-item:hover{background:#c6f6d5;border-color:#22c55e}
+.menu-item.gf-item .mi-name{color:#22c55e}
+.menu-item.gf-item .mi-price{color:#22c55e}
 
 .inline-note{background:#e8f7fb;border:2px solid #1a9bbb;border-radius:12px;padding:14px;margin-top:8px;animation:slideDown .18s ease;grid-column:1/-1}
 @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
@@ -178,7 +178,7 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 .kc-item-note{font-size:.88rem;color:#dd6b20;font-style:italic;font-weight:700;display:block;margin-top:3px;text-transform:none}
 .kc-foot{padding:12px 16px;display:flex;gap:10px;flex-wrap:wrap;border-top:2px solid #f0f4f8;align-items:center}
 .btn-pronto{background:#38a169;color:#ffffff;border:none;border-radius:14px;padding:14px 28px;font-family:‘Nunito’,sans-serif;font-weight:900;font-size:1.2rem;cursor:pointer;transition:all .15s;box-shadow:0 3px 12px rgba(56,161,105,.3)}
-.btn-pronto:hover{background:#276749;transform:scale(1.03)}
+.btn-pronto:hover{background:#22c55e;transform:scale(1.03)}
 
 .cassa-row{display:flex;align-items:center;background:#ffffff;border-radius:12px;padding:14px 16px;margin-bottom:10px;box-shadow:0 2px 16px rgba(26,155,187,.12);gap:12px;cursor:pointer;border:2.5px solid #b8e4f0;transition:all .15s}
 .cassa-row:hover{border-color:#1a9bbb}
@@ -617,7 +617,9 @@ function getStationCirclesHtml(ord,tid){
 window.serveStation=async function(tid,role){
   const ord=orders[tid];if(!ord)return;
   const sc=ord.stationColors||{};sc[role]='red';
-  await update(ref(db,`orders/${tid}`),{stationColors:sc});
+  const update_data={stationColors:sc};
+  if(role==='cucina') update_data.cucinaServitoAt=Date.now();
+  await update(ref(db,`orders/${tid}`),update_data);
   showToast('✅ Servito!');
 };
 
@@ -649,6 +651,7 @@ window.selectRole=async function(role){
   listen('tables',t=>{tables=t;});
   listen('menu',m=>{menuData=m;});
   let knownOrderKeys={};
+  let ordersInitialized=false;
   listen('orders',o=>{
     const newOrders=o||{};
     if(role==='cucina'||role==='pizzeria'||role==='polleria'){
@@ -663,13 +666,16 @@ window.selectRole=async function(role){
         }
         if(!hasMyItems)return;
         const key=tid+'_'+ord.timestamp+'_'+items.length;
-        if(knownOrderKeys[tid]!==key){
+        if(ordersInitialized&&knownOrderKeys[tid]!==key){
           knownOrderKeys[tid]=key;
           if(settings.soundEnabled!==false)playSuonoStazione(role);
+        } else {
+          knownOrderKeys[tid]=key;
         }
       });
     }
     orders=newOrders;
+    ordersInitialized=true;
     renderRole();
   });
   listen('dailyStats',s=>{dailyStats=s;});
@@ -798,7 +804,7 @@ function renderOrderPanel(){
         <div style="margin-bottom:14px">
           <div class="section-title" style="font-size:1.1rem;margin-bottom:8px">📋 Già ordinato</div>
           <div style="background:#f0f4f8;border-radius:12px;padding:12px;border:2px solid #b8e4f0">
-            ${existingItems.map(it=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #b8e4f0;font-weight:700;font-size:.95rem;color:${it.glutenFree?'#276749':'#1a202c'}">
+            ${existingItems.map(it=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #b8e4f0;font-weight:700;font-size:.95rem;color:${it.glutenFree?'#22c55e':'#1a202c'}">
               <span>×${it.qty||1} ${it.name.toUpperCase()}</span>
               <span style="color:#0e7a9a">${fmt((it.price||0)*(it.qty||1))}</span>
             </div>`).join('')}
@@ -829,7 +835,7 @@ function renderMenuItems(catItems,gf=false){
     const sel=(selectedMenuItem===iid)?'selected':'';
     const gfClass=gf?'gf-item':'';
     const itemGf=gf||isGlutenFreeItem(item);
-    const nameStyle=itemGf?'color:#276749;font-weight:900':'';
+    const nameStyle=itemGf?'color:#22c55e;font-weight:900':'';
     const gfClass2=itemGf?'gf-item':'';
     return`<div class="menu-item ${so} ${sel} ${gfClass2}" id="mi_${iid}" onclick="${item.soldOut?'':(`selectMenuItem('${iid}','${currentCat}')`)}">
       <div class="mi-name" style="${nameStyle}">${item.name.toUpperCase()}</div>
@@ -884,7 +890,7 @@ function renderCurrentOrder(tempOrder){
   if(!tempOrder||!tempOrder.length)return'<div style="color:#4a5568;font-size:.95rem;padding:8px 0;font-weight:600">Nessun articolo aggiunto</div>';
   const rows=tempOrder.map((it,i)=>`
     <div class="order-row">
-      <div class="or-info"><div class="or-name" style="${it.glutenFree?'color:#276749;font-weight:900':''}">${it.name.toUpperCase()}</div>${it.note?`<div class="or-note">📝 ${it.note}</div>`:''}</div>
+      <div class="or-info"><div class="or-name" style="${it.glutenFree?'color:#22c55e;font-weight:900':''}">${it.name.toUpperCase()}</div>${it.note?`<div class="or-note">📝 ${it.note}</div>`:''}</div>
       <div class="or-qty">
         <button class="qty-btn" onclick="removeOrderItem(${i})">−</button>
         <span style="font-weight:900;min-width:20px;text-align:center;font-size:1rem;color:#1a202c">${it.qty||1}</span>
@@ -976,8 +982,32 @@ function renderStationContent(role){
       </div>
       <div class="kc-body">
         <div class="kc-mine-title">▶ DA PREPARARE</div>
-        ${mine.map(it=>`<div class="kc-item" style="${it.glutenFree?'color:#276749':''}">${it.qty>1?`×${it.qty} `:''}${it.name.toUpperCase()}${it.note?`<span class="kc-item-note">📝 ${it.note}</span>`:''}</div>`).join('')}
-        ${others.length?`<div class="kc-other-title">📋 RESTO DEL TAVOLO</div>${others.map(it=>`<div class="kc-item dim">${it.qty>1?`×${it.qty} `:''}${it.name.toUpperCase()}${it.note?`<span class="kc-item-note">📝 ${it.note}</span>`:''}</div>`).join('')}`:''}
+        ${mine.map(it=>`<div class="kc-item" style="${it.glutenFree?'color:#22c55e':''}">${it.qty>1?`×${it.qty} `:''}${it.name.toUpperCase()}${it.note?`<span class="kc-item-note">📝 ${it.note}</span>`:''}</div>`).join('')}
+        ${(()=>{
+          if(!others.length) return '';
+          // Group by destination
+          const groups={};
+          others.forEach(it=>{
+            const dest=it.dest||'cucina';
+            if(!groups[dest]) groups[dest]=[];
+            groups[dest].push(it);
+          });
+          const destLabel={cucina:'🍽️ CUCINA',pizzeria:'🍕 PIZZERIA',polleria:'🍗 POLLERIA'};
+          return Object.entries(groups).map(([dest,gitems])=>{
+            const sc2=ord.stationColors||{};
+            const isServed=sc2[dest]==='red';
+            const servedAt=dest==='cucina'?ord.cucinaServitoAt:null;
+            const minAgo=servedAt?Math.floor((Date.now()-servedAt)/60000):0;
+            const timerServed=servedAt?`<span style="font-size:.78rem;font-weight:800;color:#e53e3e;margin-left:8px">⏱ ${minAgo} min fa</span>`:'';
+            return `<div style="position:relative;margin-top:8px">
+              <div class="kc-other-title">${destLabel[dest]||dest}</div>
+              ${gitems.map(it=>`<div class="kc-item dim" style="${it.glutenFree?'color:#22c55e':''}">${it.qty>1?`×${it.qty} `:''}${it.name.toUpperCase()}${it.note?`<span class="kc-item-note">📝 ${it.note}</span>`:''}</div>`).join('')}
+              ${isServed?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
+                <span style="font-size:2.2rem;font-weight:900;color:rgba(229,62,62,0.35);transform:rotate(-12deg);letter-spacing:2px;text-transform:uppercase">SERVITO${timerServed}</span>
+              </div>`:''}
+            </div>`;
+          }).join('');
+        })()}
       </div>
       <div class="kc-foot">
         ${!isReady&&!isDone?`<button class="btn-pronto" onclick="markStationReady('${tid}','${role}')">✅ Pronto!</button>`:''}
