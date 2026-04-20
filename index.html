@@ -474,17 +474,16 @@ window.toggleAudio=function(){
 
 function playSquillo(onEnd){
   try{
-    // Genera suono direttamente senza file esterni
-    const ctx=new (window.AudioContext||window.webkitAudioContext)();
-    ctx.resume().then(()=>{
+    if(!audioCtx){audioCtx=new (window.AudioContext||window.webkitAudioContext)();}
+    audioCtx.resume().then(()=>{
       const pattern=[880,1100,1320,880,1100,1320,880,1100,1320];
       pattern.forEach((freq,i)=>{
-        const o=ctx.createOscillator();
-        const g=ctx.createGain();
-        o.connect(g);g.connect(ctx.destination);
+        const o=audioCtx.createOscillator();
+        const g=audioCtx.createGain();
+        o.connect(g);g.connect(audioCtx.destination);
         o.type='square';
         o.frequency.value=freq;
-        const t=ctx.currentTime+i*0.18;
+        const t=audioCtx.currentTime+i*0.18;
         g.gain.setValueAtTime(0,t);
         g.gain.linearRampToValueAtTime(0.35,t+0.02);
         g.gain.linearRampToValueAtTime(0.35,t+0.14);
