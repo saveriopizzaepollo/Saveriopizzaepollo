@@ -486,21 +486,7 @@ function playSquillo(onEnd){
 }
 
 function speakText(text){
-  try{
-    if(!('speechSynthesis' in window))return;
-    window.speechSynthesis.cancel();
-    const utt=new SpeechSynthesisUtterance(text);
-    utt.lang='it-IT';
-    utt.rate=0.95;
-    utt.pitch=1.1;
-    utt.volume=1;
-    // Prova a usare voce italiana se disponibile
-    const voices=window.speechSynthesis.getVoices();
-    const itVoice=voices.find(v=>v.lang.startsWith('it'));
-    if(itVoice)utt.voice=itVoice;
-    window.speechSynthesis.speak(utt);
-  }catch(e){}
-}
+
 
 function notificaCamerierePronte(tableName,role){
   if(currentRole!=='cameriere'||!audioEnabled)return;
