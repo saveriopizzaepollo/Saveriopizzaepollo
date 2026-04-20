@@ -474,8 +474,7 @@ window.toggleAudio=function(){
 
 function playSquillo(onEnd){
   try{
-    const ctx=audioCtx||(new (window.AudioContext||window.webkitAudioContext)());
-    if(ctx.state==='suspended'){ctx.resume();}
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
     const pattern=[880,1100,1320,880,1100,1320,880,1100,1320];
     pattern.forEach((freq,i)=>{
       const o=ctx.createOscillator();
