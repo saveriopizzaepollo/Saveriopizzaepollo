@@ -1046,9 +1046,16 @@ window.sendOrder=async function(){
   if(!tempOrder.length){showToast('Aggiungi almeno un articolo!');return;}
   const existing=orders[selectedTable];
   const existingItems=existing?.items?(Array.isArray(existing.items)?existing.items:Object.values(existing.items)):[];
-  const merged=[...existingItems,...tempOrder];
+  // Aggiungi sentAt ai nuovi articoli per distinguerli dai vecchi
+  const now=Date.now();
+  const newItems=tempOrder.map(it=>({...it,sentAt:now}));
+  const merged=[...existingItems,...newItems];
   const sc=existing?.stationColors||{};
-  ['cucina','pizzeria','polleria'].forEach(role=>{const hasRole=merged.some(it=>it.dest===role);if(hasRole&&(!sc[role]||sc[role]===''))sc[role]='green';});
+  // Resetta lo stato della stazione a green se ci sono nuovi articoli per quella stazione
+  ['cucina','pizzeria','polleria'].forEach(role=>{
+    const hasNewRole=newItems.some(it=>it.dest===role);
+    if(hasNewRole){sc[role]='green';}
+  });
   await set(ref(db,`orders/${selectedTable}`),{tableId:selectedTable,tableName:tables[selectedTable]?.name||'',items:merged,status:'pending',timestamp:existing?.timestamp||Date.now(),covers:tables[selectedTable]?.covers||1,newItems:true,stationColors:sc});
   playWhoosh();clearDraft(selectedTable);
   showToast(`✅ ${existingItems.length?'Aggiunta inviata!':'Ordine inviato!'}`);
@@ -1097,9 +1104,15 @@ function renderStationContent(role){
 
   c.innerHTML=`<div class="kitchen-grid mt-12">${list.map(([tid,ord])=>{
     const items=Array.isArray(ord.items)?ord.items:Object.values(ord.items||{});
-    let mine;
-    if(role==='polleria'){mine=items.filter(it=>it.dest==='polleria'&&(it.name.toLowerCase().includes('pollo')||it.name.toLowerCase().includes('rosticceria')));}
-    else{mine=items.filter(it=>it.dest===role);}
+    // Trova il sentAt più recente per questa stazione
+    let myItems;
+    if(role==='polleria'){myItems=items.filter(it=>it.dest==='polleria'&&(it.name.toLowerCase().includes('pollo')||it.name.toLowerCase().includes('rosticceria')));}
+    else{myItems=items.filter(it=>it.dest===role);}
+    // Trova l'ultimo invio per questa stazione
+    const lastSentAt=Math.max(...myItems.map(it=>it.sentAt||0));
+    // Separa nuovi (stesso sentAt dell'ultimo invio) da vecchi
+    const mineNew=myItems.filter(it=>(it.sentAt||0)===lastSentAt);
+    const mineOld=myItems.filter(it=>(it.sentAt||0)!==lastSentAt);
     const others=items.filter(it=>it.dest!==role&&it.dest!=='cameriere');
     const sc=ord.stationColors||{};
     const myState=sc[role]||'green';
@@ -1115,7 +1128,10 @@ function renderStationContent(role){
       </div>
       <div class="kc-body">
         <div class="kc-mine-title">▶ DA PREPARARE</div>
-        ${mine.map(it=>`<div class="kc-item" style="${it.glutenFree?'color:#22c55e':''}">${it.qty>1?`×${it.qty} `:''}${it.name.toUpperCase()}${it.note?`<span class="kc-item-note">📝 ${it.note}</span>`:''}</div>`).join('')}
+        ${mineNew.map(it=>`<div class="kc-item" style="${it.glutenFree?'color:#22c55e':''}">${it.qty>1?`×${it.qty} `:''}${it.name.toUpperCase()}${it.note?`<span class="kc-item-note">📝 ${it.note}</span>`:''}</div>`).join('')}
+        ${mineOld.length?`
+        <div class="kc-other-title" style="color:#9a7b4f">✅ GIÀ PREPARATI</div>
+        ${mineOld.map(it=>`<div class="kc-item dim" style="text-decoration:line-through;opacity:.5">${it.qty>1?`×${it.qty} `:''}${it.name.toUpperCase()}</div>`).join('')}`:''}
         ${(()=>{
           if(!others.length)return'';
           const groups={};
