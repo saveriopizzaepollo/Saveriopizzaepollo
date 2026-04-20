@@ -443,15 +443,26 @@ const draftOrders={};
 
 // ── AUDIO CAMERIERE ───────────────────────────────────────────
 let audioEnabled=false;
-let knownStationStates={};// traccia stati stazioni per rilevare cambio a yellow
+let audioCtx=null;
+let knownStationStates={};
+
+function unlockAudioContext(){
+  try{
+    if(!audioCtx){audioCtx=new (window.AudioContext||window.webkitAudioContext)();}
+    if(audioCtx.state==='suspended'){audioCtx.resume();}
+    const buf=audioCtx.createBuffer(1,1,22050);
+    const src=audioCtx.createBufferSource();
+    src.buffer=buf;src.connect(audioCtx.destination);src.start(0);
+  }catch(e){}
+}
 
 window.toggleAudio=function(){
   audioEnabled=!audioEnabled;
   const btn=document.getElementById('audioBtn');
   if(audioEnabled){
+    unlockAudioContext();
     btn.textContent='🔔 Audio ON';
     btn.className='topbar-btn audio-btn-active';
-    // Test immediato squillo + voce per confermare che funziona
     playSquillo(()=>speakText('Audio attivato'));
     showToast('🔔 Audio notifiche attivato!');
   }else{
@@ -463,9 +474,8 @@ window.toggleAudio=function(){
 
 function playSquillo(onEnd){
   try{
-    const ctx=new AudioContext();
-    const dur=2.5;
-    // Squillo forte — tre toni ascendenti ripetuti
+    const ctx=audioCtx||(new (window.AudioContext||window.webkitAudioContext)());
+    if(ctx.state==='suspended'){ctx.resume();}
     const pattern=[880,1100,1320,880,1100,1320,880,1100,1320];
     pattern.forEach((freq,i)=>{
       const o=ctx.createOscillator();
@@ -480,7 +490,6 @@ function playSquillo(onEnd){
       g.gain.linearRampToValueAtTime(0,t+0.18);
       o.start(t);o.stop(t+0.2);
     });
-    // Chiama onEnd dopo squillo
     setTimeout(()=>{if(onEnd)onEnd();},pattern.length*180+200);
   }catch(e){if(onEnd)onEnd();}
 }
