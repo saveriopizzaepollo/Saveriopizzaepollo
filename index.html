@@ -486,7 +486,24 @@ function playSquillo(onEnd){
 }
 
 function speakText(text){
-
+  try{
+    if(!('speechSynthesis' in window))return;
+    window.speechSynthesis.cancel();
+    const speak=(voices)=>{
+      const utt=new SpeechSynthesisUtterance(text);
+      utt.lang='it-IT';
+      utt.rate=0.95;
+      utt.pitch=1.1;
+      utt.volume=1;
+      const itVoice=voices.find(v=>v.lang==='it-IT')||voices.find(v=>v.lang.startsWith('it'));
+      if(itVoice)utt.voice=itVoice;
+      window.speechSynthesis.speak(utt);
+    };
+    const voices=window.speechSynthesis.getVoices();
+    if(voices.length>0){speak(voices);}
+    else{window.speechSynthesis.onvoiceschanged=()=>{speak(window.speechSynthesis.getVoices());};}
+  }catch(e){}
+}
 
 function notificaCamerierePronte(tableName,role){
   if(currentRole!=='cameriere'||!audioEnabled)return;
