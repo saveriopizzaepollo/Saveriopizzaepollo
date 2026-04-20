@@ -474,11 +474,25 @@ window.toggleAudio=function(){
 
 function playSquillo(onEnd){
   try{
-    // Usa Audio element — molto più affidabile su mobile dopo interazione utente
-    const audio=new Audio('https://www.soundjay.com/buttons/sounds/button-09.mp3');
-    audio.volume=1;
-    audio.play().catch(()=>{});
-    setTimeout(()=>{if(onEnd)onEnd();},2000);
+    // Genera suono direttamente senza file esterni
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    ctx.resume().then(()=>{
+      const pattern=[880,1100,1320,880,1100,1320,880,1100,1320];
+      pattern.forEach((freq,i)=>{
+        const o=ctx.createOscillator();
+        const g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);
+        o.type='square';
+        o.frequency.value=freq;
+        const t=ctx.currentTime+i*0.18;
+        g.gain.setValueAtTime(0,t);
+        g.gain.linearRampToValueAtTime(0.35,t+0.02);
+        g.gain.linearRampToValueAtTime(0.35,t+0.14);
+        g.gain.linearRampToValueAtTime(0,t+0.18);
+        o.start(t);o.stop(t+0.2);
+      });
+      setTimeout(()=>{if(onEnd)onEnd();},pattern.length*180+200);
+    });
   }catch(e){if(onEnd)onEnd();}
 }
 
