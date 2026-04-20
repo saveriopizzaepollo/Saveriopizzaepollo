@@ -970,6 +970,8 @@ function renderMenuItems(catItems,gf=false){
     const itemGf=gf||isGlutenFreeItem(item);
     const nameStyle=itemGf?'color:#22c55e;font-weight:900':'';
     const gfClass2=itemGf?'gf-item':'';
+    const defaultDest=menuData[currentCat]?.dest||'cucina';
+    const canSendAsAntipasto=defaultDest==='pizzeria'||defaultDest==='polleria';
     return`<div class="menu-item ${so} ${sel} ${gfClass2}" id="mi_${iid}" onclick="${item.soldOut?'':(`selectMenuItem('${iid}','${currentCat}')`)}">
       <div class="mi-name" style="${nameStyle}">${item.name.toUpperCase()}</div>
       ${item.desc?`<div class="mi-desc">${item.desc}</div>`:''}
@@ -984,6 +986,14 @@ function renderMenuItems(catItems,gf=false){
         <button class="inline-qty-btn" onclick="changeInlineQty(1,'${iid}','${currentCat}')">+</button>
         <span class="inline-qty-total">${fmt(item.price*inlineQty)}</span>
       </div>
+      ${canSendAsAntipasto?`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:.88rem;font-weight:800;color:#2d3748">Destinazione:</span>
+        <button id="destToggle_${iid}" onclick="toggleDest('${iid}')"
+          style="padding:8px 16px;border-radius:20px;border:2.5px solid #b8e4f0;background:#ffffff;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;color:#0e7a9a;transition:all .15s">
+          🍕 ${defaultDest==='pizzeria'?'Pizzeria':'Polleria'}
+        </button>
+      </div>`:''}
       <input class="inline-note-input" id="inlineNoteInput_${iid}" placeholder="Nota opzionale…" onkeydown="if(event.key==='Enter')confirmInlineItem('${iid}','${currentCat}')">
       <div class="inline-note-actions">
         <button class="btn btn-primary btn-sm" onclick="confirmInlineItem('${iid}','${currentCat}')">✅ Aggiungi</button>
@@ -993,9 +1003,33 @@ function renderMenuItems(catItems,gf=false){
   }).join('');
 }
 
+let destOverride=null;
+
+window.toggleDest=function(iid){
+  const defaultDest=menuData[currentCat]?.dest||'cucina';
+  const btn=document.getElementById(`destToggle_${iid}`);
+  if(!btn)return;
+  if(destOverride==='cucina'){
+    // Torna alla destinazione originale
+    destOverride=null;
+    btn.style.background='#ffffff';
+    btn.style.borderColor='#b8e4f0';
+    btn.style.color='#0e7a9a';
+    btn.textContent=`🍕 ${defaultDest==='pizzeria'?'Pizzeria':'Polleria'}`;
+  }else{
+    // Invia in cucina come antipasto
+    destOverride='cucina';
+    btn.style.background='#fff3e0';
+    btn.style.borderColor='#dd6b20';
+    btn.style.color='#7b3a10';
+    btn.textContent='🥗 Antipasto (Cucina)';
+  }
+};
+
 window.changeInlineQty=function(delta,iid,catId){inlineQty=Math.max(1,inlineQty+delta);const disp=document.getElementById('inlineQtyDisplay');if(disp)disp.textContent=inlineQty;const item=menuData[catId]?.items?.[iid];if(item){const totalEl=disp?.parentElement?.querySelector('.inline-qty-total');if(totalEl)totalEl.textContent=fmt(item.price*inlineQty);}};
 
 window.selectMenuItem=function(iid,catId){
+  destOverride=null;
   if(selectedMenuItem===iid){selectedMenuItem=null;inlineQty=1;}else{selectedMenuItem=iid;inlineQty=1;}
   const gf=isGlutenFree(catId);const grid=document.getElementById('menuGrid');
   if(grid)grid.innerHTML=renderMenuItems(menuData[catId]?.items||{},gf);
@@ -1004,16 +1038,19 @@ window.selectMenuItem=function(iid,catId){
 
 window.confirmInlineItem=function(iid,catId){
   const item=menuData[catId]?.items?.[iid];if(!item)return;
-  const dest=menuData[catId]?.dest||'cucina';
+  const dest=destOverride||menuData[catId]?.dest||'cucina';
   const sep=item.separate||false;
   const noteEl=document.getElementById(`inlineNoteInput_${iid}`);
   const note=noteEl?noteEl.value.trim():'';
+  // Se mandato come antipasto aggiungi nota automatica
+  const finalNote=destOverride==='cucina'&&menuData[catId]?.dest!=='cucina'?
+    (note?note+' — antipasto':'antipasto'):note;
   const qty=inlineQty||1;
   const tempOrder=getDraft(selectedTable);
-  if(!sep&&!note){const existing=tempOrder.find(it=>it.iid===iid&&!it.note);if(existing){existing.qty=(existing.qty||1)+qty;}else{tempOrder.push({uid:Date.now()+'_'+Math.random(),iid,name:item.name,price:item.price,qty,note:'',dest,separate:sep,glutenFree:item.glutenFree||false});}}
-  else{tempOrder.push({uid:Date.now()+'_'+Math.random(),iid,name:item.name,price:item.price,qty,note,dest,separate:sep,glutenFree:item.glutenFree||false});}
-  setDraft(selectedTable,tempOrder);selectedMenuItem=null;inlineQty=1;
-  showProductToast(`✅ ×${qty} ${item.name.toUpperCase()} aggiunto`);
+  if(!sep&&!finalNote){const existing=tempOrder.find(it=>it.iid===iid&&!it.note&&it.dest===dest);if(existing){existing.qty=(existing.qty||1)+qty;}else{tempOrder.push({uid:Date.now()+'_'+Math.random(),iid,name:item.name,price:item.price,qty,note:'',dest,separate:sep,glutenFree:item.glutenFree||false});}}
+  else{tempOrder.push({uid:Date.now()+'_'+Math.random(),iid,name:item.name,price:item.price,qty,note:finalNote,dest,separate:sep,glutenFree:item.glutenFree||false});}
+  setDraft(selectedTable,tempOrder);selectedMenuItem=null;inlineQty=1;destOverride=null;
+  showProductToast(`✅ ×${qty} ${item.name.toUpperCase()}${destOverride==='cucina'?' → 🥗 Cucina':''} aggiunto`);
   renderOrderPanel();
 };
 
