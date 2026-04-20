@@ -790,19 +790,20 @@ window.selectRole=async function(role){
         }else{knownOrderKeys[tid]=key;}
       });
     }
-    // Controlla cambi stazione per notifica cameriere
-    if(ordersInitialized&&role==='cameriere'){
-      checkStationReadyChanges(newOrders);
-    }
     // Inizializza stati noti al primo caricamento
     if(!ordersInitialized){
       Object.entries(newOrders).forEach(([tid,ord])=>{
         if(ord?.stationColors)knownStationStates[tid]={...ord.stationColors};
       });
     }
+    const wasInitialized=ordersInitialized;
     orders=newOrders;
     ordersInitialized=true;
     renderRole();
+    // Controlla cambi stazione DOPO renderRole — così il banner non sparisce subito
+    if(wasInitialized&&role==='cameriere'){
+      checkStationReadyChanges(newOrders);
+    }
   });
   listen('dailyStats',s=>{dailyStats=s;});
   chatInitialized=false;
