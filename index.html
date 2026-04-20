@@ -50,12 +50,18 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 .topbar-btn{background:#e8f7fb;border:2px solid #b8e4f0;color:#1a202c;padding:9px 16px;border-radius:10px;cursor:pointer;font-family:‘Nunito’,sans-serif;font-weight:700;font-size:.9rem;position:relative;transition:all .15s}
 .topbar-btn:hover{background:#b8e4f0;border-color:#1a9bbb}
 .notif-badge{position:absolute;top:-5px;right:-5px;background:#e53e3e;color:#ffffff;border-radius:50%;width:18px;height:18px;font-size:.62rem;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid #1a202c}
+.audio-btn-active{background:#22c55e!important;border-color:#16a34a!important;color:#ffffff!important}
+.audio-btn-inactive{background:#fee2e2!important;border-color:#e53e3e!important;color:#e53e3e!important}
 
 .cart-badge-fixed{position:fixed;bottom:24px;right:20px;background:#1a9bbb;color:#1a202c;border-radius:50px;padding:12px 20px;font-weight:900;font-size:1rem;box-shadow:0 4px 20px rgba(26,155,187,.35);z-index:500;display:none;align-items:center;gap:8px;border:2px solid #0e7a9a;cursor:pointer;transition:all .2s}
 .cart-badge-fixed:hover{transform:scale(1.05)}
 .cart-count{background:#e53e3e;color:#ffffff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:900}
 .product-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:#22c55e;color:#ffffff;padding:12px 24px;border-radius:40px;font-weight:800;font-size:.95rem;z-index:9998;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
 .product-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Notifica pronto cameriere */
+.ready-notification{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:#38a169;color:#ffffff;padding:16px 28px;border-radius:18px;font-weight:900;font-size:1.1rem;z-index:9997;opacity:0;transition:all .4s;pointer-events:none;text-align:center;box-shadow:0 6px 32px rgba(56,161,105,.4);border:3px solid #22c55e;max-width:90vw}
+.ready-notification.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 .tabs{display:flex;background:#ffffff;border-bottom:2.5px solid #b8e4f0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
@@ -208,7 +214,6 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 .stat-val{font-size:2rem;font-weight:900;color:#0e7a9a}
 .stat-lbl{font-size:.9rem;color:#2d3748;font-weight:700;margin-top:4px}
 
-/* ── STORICO ── */
 .storico-row{display:flex;align-items:center;background:#ffffff;border-radius:12px;padding:13px 16px;margin-bottom:9px;box-shadow:0 2px 16px rgba(26,155,187,.12);border:2px solid #b8e4f0;gap:12px}
 .storico-table{font-weight:900;font-size:1rem;color:#0e7a9a;min-width:80px}
 .storico-items{flex:1;font-size:.85rem;color:#2d3748;font-weight:600}
@@ -258,6 +263,9 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
   <span class="cart-count" id="cartBadgeCount">0</span>
 </div>
 <div class="product-toast" id="productToast"></div>
+<div class="ready-notification" id="readyNotification"></div>
+
+<!-- Modali -->
 
 <div class="modal-overlay" id="passModal">
   <div class="modal-box">
@@ -399,6 +407,7 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
       <div class="topbar-role" id="topbarRole">—</div>
     </div>
     <div class="topbar-btns">
+      <button class="topbar-btn audio-btn-inactive" id="audioBtn" onclick="toggleAudio()" style="display:none">🔔 Attiva Audio</button>
       <button class="topbar-btn" id="chatBtn" onclick="openChat()" style="display:none">💬 Chat <span id="chatBadge" class="notif-badge" style="display:none">0</span></button>
       <button class="topbar-btn" onclick="goBack()">← Esci</button>
     </div>
@@ -431,6 +440,98 @@ let wakeLock=null,timerInterval=null;
 let chatInitialized=false;
 let lastOrdersJson='';
 const draftOrders={};
+
+// ── AUDIO CAMERIERE ───────────────────────────────────────────
+let audioEnabled=false;
+let knownStationStates={};// traccia stati stazioni per rilevare cambio a yellow
+
+window.toggleAudio=function(){
+  audioEnabled=!audioEnabled;
+  const btn=document.getElementById('audioBtn');
+  if(audioEnabled){
+    btn.textContent='🔔 Audio ON';
+    btn.className='topbar-btn audio-btn-active';
+    // Test immediato squillo + voce per confermare che funziona
+    playSquillo(()=>speakText('Audio attivato'));
+    showToast('🔔 Audio notifiche attivato!');
+  }else{
+    btn.textContent='🔔 Attiva Audio';
+    btn.className='topbar-btn audio-btn-inactive';
+    showToast('🔕 Audio notifiche disattivato');
+  }
+};
+
+function playSquillo(onEnd){
+  try{
+    const ctx=new AudioContext();
+    const dur=2.5;
+    // Squillo forte — tre toni ascendenti ripetuti
+    const pattern=[880,1100,1320,880,1100,1320,880,1100,1320];
+    pattern.forEach((freq,i)=>{
+      const o=ctx.createOscillator();
+      const g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.type='square';
+      o.frequency.value=freq;
+      const t=ctx.currentTime+i*0.18;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(0.35,t+0.02);
+      g.gain.linearRampToValueAtTime(0.35,t+0.14);
+      g.gain.linearRampToValueAtTime(0,t+0.18);
+      o.start(t);o.stop(t+0.2);
+    });
+    // Chiama onEnd dopo squillo
+    setTimeout(()=>{if(onEnd)onEnd();},pattern.length*180+200);
+  }catch(e){if(onEnd)onEnd();}
+}
+
+function speakText(text){
+  try{
+    if(!('speechSynthesis' in window))return;
+    window.speechSynthesis.cancel();
+    const utt=new SpeechSynthesisUtterance(text);
+    utt.lang='it-IT';
+    utt.rate=0.95;
+    utt.pitch=1.1;
+    utt.volume=1;
+    // Prova a usare voce italiana se disponibile
+    const voices=window.speechSynthesis.getVoices();
+    const itVoice=voices.find(v=>v.lang.startsWith('it'));
+    if(itVoice)utt.voice=itVoice;
+    window.speechSynthesis.speak(utt);
+  }catch(e){}
+}
+
+function notificaCamerierePronte(tableName,role){
+  if(currentRole!=='cameriere'||!audioEnabled)return;
+  const roleLabel={cucina:'cucina',pizzeria:'pizzeria',polleria:'polleria'}[role]||role;
+  const msg=`${tableName}, ${roleLabel} pronta!`;
+  // Mostra notifica visiva
+  const el=document.getElementById('readyNotification');
+  const iconMap={cucina:'🍽️',pizzeria:'🍕',polleria:'🍗'};
+  el.innerHTML=`${iconMap[role]||'✅'} <strong>${tableName}</strong> — ${roleLabel.toUpperCase()} PRONTA!`;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),5000);
+  // Squillo poi voce
+  playSquillo(()=>speakText(msg));
+}
+
+function checkStationReadyChanges(newOrders){
+  if(currentRole!=='cameriere'||!audioEnabled)return;
+  Object.entries(newOrders).forEach(([tid,ord])=>{
+    if(!ord||!ord.stationColors)return;
+    const sc=ord.stationColors;
+    const prev=knownStationStates[tid]||{};
+    ['cucina','pizzeria','polleria'].forEach(role=>{
+      // Se lo stato è diventato 'yellow' (pronto) da qualsiasi altro stato
+      if(sc[role]==='yellow'&&prev[role]!=='yellow'){
+        const tableName=ord.tableName||tables[tid]?.name||tid;
+        notificaCamerierePronte(tableName,role);
+      }
+    });
+    knownStationStates[tid]={...sc};
+  });
+}
 
 function getDraft(tid){return draftOrders[tid]||[];}
 function setDraft(tid,items){draftOrders[tid]=items;}
@@ -503,12 +604,10 @@ const PIZZE_ITEMS={
 };
 
 const DEFAULT_MENU={
-  antipasti:{label:"🥗 Antipasti",dest:"cucina",items:{patate_fritte:{name:"Patate Fritte",price:4.00,desc:""},antipasto_caldo:{name:"Antipasto Caldo x2",price:8.00,desc:"Patatine fritte, panelle, verdure in pastella, anelli di cipolla, mozzarelline fritte"},pata_cheddar:{name:"Pata Cheddar e Bacon",price:6.00,desc:"Patatine fritte con salsa cheddar e bacon croccante"},pollo_mix:{name:"Pollo Mix x2",price:6.00,desc:"Patatine fritte, straccetti di pollo, chicken nuggets, alette piccanti, stick mozzarella"},bruschette_romana:{name:"Bruschette alla Romana",price:4.00,desc:"Pomodoro, aglio, basilico, pepe, sale e olio"},bruschette_miste:{name:"Bruschette Miste",price:6.00,desc:""},
-    patate_fritte_sg:{name:"Patate Fritte SG",price:4.00,desc:"Senza glutine",glutenFree:true}}},
+  antipasti:{label:"🥗 Antipasti",dest:"cucina",items:{patate_fritte:{name:"Patate Fritte",price:4.00,desc:""},antipasto_caldo:{name:"Antipasto Caldo x2",price:8.00,desc:"Patatine fritte, panelle, verdure in pastella, anelli di cipolla, mozzarelline fritte"},pata_cheddar:{name:"Pata Cheddar e Bacon",price:6.00,desc:"Patatine fritte con salsa cheddar e bacon croccante"},pollo_mix:{name:"Pollo Mix x2",price:6.00,desc:"Patatine fritte, straccetti di pollo, chicken nuggets, alette piccanti, stick mozzarella"},bruschette_romana:{name:"Bruschette alla Romana",price:4.00,desc:"Pomodoro, aglio, basilico, pepe, sale e olio"},bruschette_miste:{name:"Bruschette Miste",price:6.00,desc:""},patate_fritte_sg:{name:"Patate Fritte SG",price:4.00,desc:"Senza glutine",glutenFree:true}}},
   taglieri:{label:"🧀 Taglieri",dest:"cucina",items:{tagliere_salumi:{name:"Tagliere Salumi e Formaggi x2",price:15.00,desc:""},tagliere_rosticceria:{name:"Tagliere Rosticceria Mignon",price:12.00,desc:"10 pezzi rosticceria mignon misti"}}},
   insalate:{label:"🥗 Insalate",dest:"cucina",items:{maestosa:{name:"Maestosa",price:8.00,desc:"Rucola, radicchio, pomodorini, scaglie di grana e fior di latte"},siciliana:{name:"Siciliana",price:6.00,desc:"Acciughe, lattuga, pomodoro e olive nere"},vastasa:{name:"Vastasa",price:7.00,desc:"Lattuga, pomodoro, cipolla calabrese, olive nere e tonno"},regina_ins:{name:"Regina",price:10.00,desc:"Lattuga, rucola, pomodorini, bufala, prosciutto crudo e scaglie di grana"}}},
-  pollo:{label:"🍗 Pollo alla Brace",dest:"polleria",items:{mezzo_pollo:{name:"1/2 Pollo",price:8.50,desc:"Con patate fritte e crocchette",separate:true},
-    mezzo_pollo_sg:{name:"1/2 Pollo SG",price:8.50,desc:"Con patate fritte e crocchette, senza glutine",separate:true,glutenFree:true}}},
+  pollo:{label:"🍗 Pollo alla Brace",dest:"polleria",items:{mezzo_pollo:{name:"1/2 Pollo",price:8.50,desc:"Con patate fritte e crocchette",separate:true},mezzo_pollo_sg:{name:"1/2 Pollo SG",price:8.50,desc:"Con patate fritte e crocchette, senza glutine",separate:true,glutenFree:true}}},
   pizze:{label:"🍕 Pizze",dest:"pizzeria",items:PIZZE_ITEMS},
   pizze_sg:{label:"🌾 Senza Glutine",dest:"pizzeria",items:{sg_margherita:{name:"Margherita SG",price:8.00,desc:"Mozzarella senza lattosio, pomodoro",separate:true,glutenFree:true},sg_romana:{name:"Romana SG",price:9.00,desc:"Mozzarella senza lattosio, pomodoro e prosciutto cotto",separate:true,glutenFree:true},sg_parmigiana:{name:"Parmigiana SG",price:10.00,desc:"Mozzarella senza lattosio, grana, melanzane",separate:true,glutenFree:true},sg_napoli:{name:"Napoli SG",price:9.00,desc:"Mozzarella senza lattosio, pomodoro e acciughe",separate:true,glutenFree:true},sg_4gusti:{name:"4 Gusti SG",price:10.00,desc:"Mozzarella senza lattosio, pomodoro, prosciutto cotto e carciofi",separate:true,glutenFree:true},sg_regina:{name:"Regina SG",price:10.00,desc:"Pomodoro, mozzarella senza lattosio, grana, prosciutto crudo, rucola",separate:true,glutenFree:true}}},
   bibite:{label:"🥤 Bibite",dest:"cameriere",items:{acqua_nat_1L:{name:"Acqua Naturale 1L",price:2.50,desc:""},acqua_frizz_1L:{name:"Acqua Frizzante 1L",price:2.50,desc:""},acqua_nat_05L:{name:"Acqua Naturale 0.5L",price:1.50,desc:""},acqua_frizz_05L:{name:"Acqua Frizzante 0.5L",price:1.50,desc:""},moretti_66:{name:"Moretti 66cl",price:3.50,desc:""},heineken_66:{name:"Heineken 66cl",price:4.50,desc:""},becks_66:{name:"Beck's 66cl",price:4.50,desc:""},moretti_33:{name:"Moretti 33cl",price:2.50,desc:""},heineken_33:{name:"Heineken 33cl",price:2.50,desc:""},becks_33:{name:"Beck's 33cl",price:2.50,desc:""},coca_15:{name:"Coca-Cola 1.5L",price:4.00,desc:""},fanta_15:{name:"Fanta 1.5L",price:4.00,desc:""},sprite_15:{name:"Sprite 1.5L",price:4.00,desc:""},coca_33:{name:"Coca-Cola 33cl",price:2.00,desc:""},fanta_33:{name:"Fanta 33cl",price:2.00,desc:""},sprite_33:{name:"Sprite 33cl",price:2.00,desc:""}}},
@@ -519,55 +618,10 @@ const DEFAULT_MENU={
 // ── SUONI ────────────────────────────────────────────────────────
 function playWhoosh(){try{const c=new AudioContext(),b=c.createBuffer(1,c.sampleRate*0.4,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++){const t=i/c.sampleRate;d[i]=Math.sin(2*Math.PI*(800-1500*t)*t)*Math.exp(-8*t)*(Math.random()*0.3+0.7);}const s=c.createBufferSource(),g=c.createGain();s.buffer=b;s.connect(g);g.connect(c.destination);g.gain.setValueAtTime(0.4,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.4);s.start();s.stop(c.currentTime+0.4);}catch(e){}}
 
-// Cucina: suono grave e profondo tipo "bong" — più lungo e forte
-function playSuonoCucina(){
-  try{
-    const c=new AudioContext(),g=c.createGain();g.connect(c.destination);
-    const dur=1.8;
-    // Nota bassa profonda
-    [120,180,240].forEach((freq,i)=>{
-      const o=c.createOscillator();o.connect(g);o.type='sine';o.frequency.value=freq;
-      const t=c.currentTime+i*0.05;
-      g.gain.setValueAtTime(0.6,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
-      o.start(t);o.stop(t+dur);
-    });
-  }catch(e){}
-}
-
-// Pizzeria: campana media — più lunga e sonora
-function playSuonoPizzeria(){
-  try{
-    const c=new AudioContext(),g=c.createGain();g.connect(c.destination);
-    const dur=1.5;
-    [660,880,1100,880,660].forEach((freq,i)=>{
-      const o=c.createOscillator();o.connect(g);o.type='sine';o.frequency.value=freq;
-      const t=c.currentTime+i*0.18;
-      g.gain.setValueAtTime(0.55,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
-      o.start(t);o.stop(t+dur);
-    });
-  }catch(e){}
-}
-
-// Polleria: trillo acuto e vivace — più lungo
-function playSuonoPolleria(){
-  try{
-    const c=new AudioContext(),g=c.createGain();g.connect(c.destination);
-    const dur=1.2;
-    [1200,1500,1200,1500,1800,1500].forEach((freq,i)=>{
-      const o=c.createOscillator();o.connect(g);o.type='square';o.frequency.value=freq;
-      const t=c.currentTime+i*0.12;
-      g.gain.setValueAtTime(0.25,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
-      o.start(t);o.stop(t+dur);
-    });
-  }catch(e){}
-}
-
-function playSuonoStazione(role){
-  if(role==='cucina') playSuonoCucina();
-  else if(role==='pizzeria') playSuonoPizzeria();
-  else if(role==='polleria') playSuonoPolleria();
-}
-
+function playSuonoCucina(){try{const c=new AudioContext(),g=c.createGain();g.connect(c.destination);const dur=1.8;[120,180,240].forEach((freq,i)=>{const o=c.createOscillator();o.connect(g);o.type='sine';o.frequency.value=freq;const t=c.currentTime+i*0.05;g.gain.setValueAtTime(0.6,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.start(t);o.stop(t+dur);});}catch(e){}}
+function playSuonoPizzeria(){try{const c=new AudioContext(),g=c.createGain();g.connect(c.destination);const dur=1.5;[660,880,1100,880,660].forEach((freq,i)=>{const o=c.createOscillator();o.connect(g);o.type='sine';o.frequency.value=freq;const t=c.currentTime+i*0.18;g.gain.setValueAtTime(0.55,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.start(t);o.stop(t+dur);});}catch(e){}}
+function playSuonoPolleria(){try{const c=new AudioContext(),g=c.createGain();g.connect(c.destination);const dur=1.2;[1200,1500,1200,1500,1800,1500].forEach((freq,i)=>{const o=c.createOscillator();o.connect(g);o.type='square';o.frequency.value=freq;const t=c.currentTime+i*0.12;g.gain.setValueAtTime(0.25,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.start(t);o.stop(t+dur);});}catch(e){}}
+function playSuonoStazione(role){if(role==='cucina')playSuonoCucina();else if(role==='pizzeria')playSuonoPizzeria();else if(role==='polleria')playSuonoPolleria();}
 function playChatPop(){try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=1200;o.type='sine';g.gain.setValueAtTime(0.15,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.18);o.start();o.stop(c.currentTime+0.18);}catch(e){}}
 
 // ── KEEP AWAKE ─────────────────────────────────────────────────
@@ -696,6 +750,9 @@ window.selectRole=async function(role){
   const labels={cameriere:'🍽️ Cameriere',pizzeria:'🍕 Pizzeria',cucina:'👨‍🍳 Cucina',polleria:'🍗 Polleria',cassa:'💰 Cassa',cassa_polleria:'🍗💰 Cassa Polleria'};
   document.getElementById('topbarRole').textContent=labels[role]||role;
   document.getElementById('chatBtn').style.display='';
+  // Mostra bottone audio solo per cameriere
+  const audioBtn=document.getElementById('audioBtn');
+  if(role==='cameriere'){audioBtn.style.display='';}else{audioBtn.style.display='none';}
   if(role==='cucina'||role==='pizzeria'||role==='polleria')requestWakeLock();
   await initFirebase();
   const ssnap=await get(ref(db,'settings'));
@@ -712,19 +769,24 @@ window.selectRole=async function(role){
         if(!ord||!ord.items)return;
         const items=Array.isArray(ord.items)?ord.items:Object.values(ord.items);
         let hasMyItems;
-        if(role==='polleria'){
-          hasMyItems=items.some(it=>it.dest==='polleria'&&(it.name.toLowerCase().includes('pollo')||it.name.toLowerCase().includes('rosticceria')));
-        }else{
-          hasMyItems=items.some(it=>it.dest===role);
-        }
+        if(role==='polleria'){hasMyItems=items.some(it=>it.dest==='polleria'&&(it.name.toLowerCase().includes('pollo')||it.name.toLowerCase().includes('rosticceria')));}
+        else{hasMyItems=items.some(it=>it.dest===role);}
         if(!hasMyItems)return;
         const key=tid+'_'+ord.timestamp+'_'+items.length;
         if(ordersInitialized&&knownOrderKeys[tid]!==key){
           knownOrderKeys[tid]=key;
           if(settings.soundEnabled!==false)playSuonoStazione(role);
-        } else {
-          knownOrderKeys[tid]=key;
-        }
+        }else{knownOrderKeys[tid]=key;}
+      });
+    }
+    // Controlla cambi stazione per notifica cameriere
+    if(ordersInitialized&&role==='cameriere'){
+      checkStationReadyChanges(newOrders);
+    }
+    // Inizializza stati noti al primo caricamento
+    if(!ordersInitialized){
+      Object.entries(newOrders).forEach(([tid,ord])=>{
+        if(ord?.stationColors)knownStationStates[tid]={...ord.stationColors};
       });
     }
     orders=newOrders;
@@ -732,16 +794,10 @@ window.selectRole=async function(role){
     renderRole();
   });
   listen('dailyStats',s=>{dailyStats=s;});
-  // Chat: inizializzazione separata per evitare false notifiche
   chatInitialized=false;
   listen('chat',c=>{
     chatMsgs=c||{};
-    if(!chatInitialized){
-      // Prima volta: solo inizializza senza badge
-      chatInitialized=true;
-      return;
-    }
-    // Messaggi successivi: notifica solo se chat chiusa e non è mio messaggio
+    if(!chatInitialized){chatInitialized=true;return;}
     const msgs=Object.values(chatMsgs).sort((a,b)=>a.time-b.time);
     const last=msgs[msgs.length-1];
     const chatOpen=document.getElementById('chatOverlay').classList.contains('active');
@@ -756,7 +812,17 @@ window.selectRole=async function(role){
   renderRole();
 };
 
-window.goBack=function(){stopAll();currentRole=null;selectedTable=null;lastOrdersJson='';chatInitialized=false;chatUnread=0;updateCartBadge();document.getElementById('splash').style.display='flex';document.getElementById('app').style.display='none';};
+window.goBack=function(){
+  stopAll();
+  currentRole=null;selectedTable=null;lastOrdersJson='';chatInitialized=false;chatUnread=0;
+  audioEnabled=false;knownStationStates={};
+  const audioBtn=document.getElementById('audioBtn');
+  audioBtn.textContent='🔔 Attiva Audio';
+  audioBtn.className='topbar-btn audio-btn-inactive';
+  updateCartBadge();
+  document.getElementById('splash').style.display='flex';
+  document.getElementById('app').style.display='none';
+};
 
 let pendingRole=null;
 window.openPassModal=function(role){pendingRole=role;document.getElementById('passInput').value='';document.getElementById('passError').style.display='none';openModal('passModal');setTimeout(()=>document.getElementById('passInput').focus(),100);};
@@ -887,7 +953,6 @@ function renderMenuItems(catItems,gf=false){
     const item=catItems[iid];
     const so=item.soldOut?'sold-out':'';
     const sel=(selectedMenuItem===iid)?'selected':'';
-    const gfClass=gf?'gf-item':'';
     const itemGf=gf||isGlutenFreeItem(item);
     const nameStyle=itemGf?'color:#22c55e;font-weight:900':'';
     const gfClass2=itemGf?'gf-item':'';
@@ -1038,22 +1103,16 @@ function renderStationContent(role){
         <div class="kc-mine-title">▶ DA PREPARARE</div>
         ${mine.map(it=>`<div class="kc-item" style="${it.glutenFree?'color:#22c55e':''}">${it.qty>1?`×${it.qty} `:''}${it.name.toUpperCase()}${it.note?`<span class="kc-item-note">📝 ${it.note}</span>`:''}</div>`).join('')}
         ${(()=>{
-          if(!others.length) return '';
-          // Group by destination
+          if(!others.length)return'';
           const groups={};
-          others.forEach(it=>{
-            const dest=it.dest||'cucina';
-            if(!groups[dest]) groups[dest]=[];
-            groups[dest].push(it);
-          });
+          others.forEach(it=>{const dest=it.dest||'cucina';if(!groups[dest])groups[dest]=[];groups[dest].push(it);});
           const destLabel={cucina:'🍽️ CUCINA',pizzeria:'🍕 PIZZERIA',polleria:'🍗 POLLERIA'};
           return Object.entries(groups).map(([dest,gitems])=>{
             const sc2=ord.stationColors||{};
             const isServed=sc2[dest]==='red';
             const servedAt=dest==='cucina'?ord.cucinaServitoAt:null;
-            const minAgo=servedAt?Math.floor((Date.now()-servedAt)/60000):0;
             const timerServed=servedAt?`<span class="servito-timer" data-ts="${servedAt}" style="font-size:.78rem;font-weight:800;color:#e53e3e;margin-left:8px">⏱ ${String(Math.floor((Date.now()-servedAt)/60000)).padStart(2,"0")}:${String(Math.floor(((Date.now()-servedAt)/1000)%60)).padStart(2,"0")} fa</span>`:'';
-            return `<div style="position:relative;margin-top:8px">
+            return`<div style="position:relative;margin-top:8px">
               <div class="kc-other-title">${destLabel[dest]||dest}</div>
               ${gitems.map(it=>`<div class="kc-item dim" style="${it.glutenFree?'color:#22c55e':''}">${it.qty>1?`×${it.qty} `:''}${it.name.toUpperCase()}${it.note?`<span class="kc-item-note">📝 ${it.note}</span>`:''}</div>`).join('')}
               ${isServed?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
@@ -1096,6 +1155,7 @@ function renderCassa(){
     <div class="content" id="cassaContent"></div>`;
   renderCassaContent();
 }
+
 function renderCassaContent(){const c=document.getElementById('cassaContent');if(!c)return;if(cassaTab==='orders')renderCassaOrders(c);else if(cassaTab==='storico')renderStorico(c);else if(cassaTab==='stats')renderStats(c);else if(cassaTab==='menu')renderMenuEditor(c);else if(cassaTab==='tables')renderTableSettings(c);else if(cassaTab==='settings')renderSettings(c);}
 
 function renderCassaOrders(c){
@@ -1112,7 +1172,6 @@ function renderCassaOrders(c){
   }).join('')}`;
 }
 
-// ── STORICO ────────────────────────────────────────────────────
 function renderStorico(c){
   const s=dailyStats||{};
   const payments=Array.isArray(s.payments)?[...s.payments].reverse():[];
@@ -1124,7 +1183,7 @@ function renderStorico(c){
       <span style="font-weight:800;color:#0e7a9a;font-size:1rem">${payments.length} tavoli chiusi</span>
       <span style="font-weight:900;color:#0e7a9a;font-size:1.2rem">${fmt(total)} totale</span>
     </div>
-    ${payments.map((p,idx)=>`
+    ${payments.map(p=>`
       <div class="storico-row">
         <div class="storico-table">${p.table||'—'}</div>
         <div class="storico-time">${new Date(p.time).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</div>
@@ -1313,12 +1372,7 @@ window.toggleSound=async function(){const cur=settings.soundEnabled!==false;awai
 window.saveNewPass=async function(){const old=document.getElementById('cpOld').value,nw=document.getElementById('cpNew').value,conf=document.getElementById('cpConfirm').value,err=document.getElementById('cpError');const ssnap=await get(ref(db,'settings'));const pw=ssnap.exists()?(ssnap.val().password||'pietro'):'pietro';if(old!==pw){err.style.display='block';err.textContent='Password attuale errata';return;}if(nw!==conf){err.style.display='block';err.textContent='Le password non coincidono';return;}if(nw.length<3){err.style.display='block';err.textContent='Password troppo corta';return;}await update(ref(db,'settings'),{password:nw});closeModal('changePassModal');showToast('✅ Password cambiata!');};
 window.resetMenu=async function(){if(!confirm('Resettare il menù? Perderai le modifiche.'))return;await set(ref(db,'menu'),DEFAULT_MENU);showToast('Menù resettato');};
 
-window.openChat=function(){
-  chatUnread=0;
-  updateChatBadge();
-  openModal('chatOverlay');
-  renderChatMsgs();
-};
+window.openChat=function(){chatUnread=0;updateChatBadge();openModal('chatOverlay');renderChatMsgs();};
 function updateChatBadge(){const b=document.getElementById('chatBadge');if(!b)return;if(chatUnread>0){b.style.display='flex';b.textContent=chatUnread;}else b.style.display='none';}
 function renderChatMsgs(){const c=document.getElementById('chatMessages');if(!c)return;const msgs=Object.values(chatMsgs).sort((a,b)=>a.time-b.time);c.innerHTML=msgs.map(m=>{const me=m.role===currentRole;return`<div class="chat-msg ${me?'me':'them'}"><div class="chat-author">${m.author}</div><div>${m.text}</div><div class="chat-time">${new Date(m.time).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</div></div>`;}).join('');c.scrollTop=c.scrollHeight;}
 window.sendChat=async function(){const inp=document.getElementById('chatInput');const text=inp.value.trim();if(!text)return;const labels={cameriere:'🍽️ Cameriere',pizzeria:'🍕 Pizzeria',cucina:'👨‍🍳 Cucina',polleria:'🍗 Polleria',cassa:'💰 Cassa',cassa_polleria:'🍗💰 Cassa Polleria'};await push(ref(db,'chat'),{text,role:currentRole,author:labels[currentRole]||currentRole,time:Date.now()});inp.value='';};
