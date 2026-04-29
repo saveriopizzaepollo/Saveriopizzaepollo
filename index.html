@@ -1203,12 +1203,10 @@ window.sendOrder=async function(){
   if(!tempOrder.length){showToast('Aggiungi almeno un articolo!');return;}
   const existing=orders[selectedTable];
   const existingItems=existing?.items?(Array.isArray(existing.items)?existing.items:Object.values(existing.items)):[];
-  // Aggiungi sentAt ai nuovi articoli per distinguerli dai vecchi
   const now=Date.now();
   const newItems=tempOrder.map(it=>({...it,sentAt:now}));
   const merged=[...existingItems,...newItems];
   const sc=existing?.stationColors||{};
-  // Resetta lo stato della stazione a green se ci sono nuovi articoli per quella stazione
   ['cucina','pizzeria','polleria'].forEach(role=>{
     const hasNewRole=newItems.some(it=>it.dest===role);
     if(hasNewRole){sc[role]='green';}
@@ -1216,18 +1214,55 @@ window.sendOrder=async function(){
   await set(ref(db,`orders/${selectedTable}`),{tableId:selectedTable,tableName:tables[selectedTable]?.name||'',items:merged,status:'pending',timestamp:existing?.timestamp||Date.now(),covers:tables[selectedTable]?.covers||1,newItems:true,stationColors:sc});
   playWhoosh();clearDraft(selectedTable);
 
-  // Stampa comanda per ogni stazione coinvolta nei nuovi articoli
+  // Salva gli ultimi articoli inviati per la stampa manuale
   const tableName=tables[selectedTable]?.name||selectedTable;
   const covers=tables[selectedTable]?.covers||1;
-  ['cucina','pizzeria','polleria'].forEach(role=>{
-    const roleItems=newItems.filter(it=>it.dest===role);
-    if(roleItems.length>0){
-      setTimeout(()=>printComanda(tableName,covers,roleItems,role),300);
-    }
-  });
+  lastSentItems=newItems;
+  lastSentTableName=tableName;
+  lastSentCovers=covers;
 
   showToast(`✅ ${existingItems.length?'Aggiunta inviata!':'Ordine inviato!'}`);
-  goTables();
+
+  // Torna ai tavoli ma mostra bottone stampa
+  selectedTable=null;camTab='tables';selectedMenuItem=null;inlineQty=1;updateCartBadge();
+  renderCameriereWithPrint();
+};
+
+let lastSentItems=[];
+let lastSentTableName='';
+let lastSentCovers=1;
+
+function renderCameriereWithPrint(){
+  const mc=document.getElementById('mainContent');
+  mc.innerHTML=`
+    <div class="tabs">
+      <button class="tab active" onclick="setCamTab('tables')">🍽️ Tavoli</button>
+    </div>
+    <div class="content">
+      <div style="background:#e8f7fb;border:2.5px solid #1a9bbb;border-radius:18px;padding:20px;margin-bottom:16px;text-align:center">
+        <div style="font-size:1.1rem;font-weight:900;color:#0e7a9a;margin-bottom:14px">✅ Ordine inviato — ${lastSentTableName}</div>
+        <button class="btn btn-warning" style="font-size:1.1rem;padding:16px 32px" onclick="stampaUltimaComanda()">🖨️ Stampa Comanda</button>
+        <div style="margin-top:10px"><button class="btn btn-secondary btn-sm" onclick="skipPrint()">Salta stampa</button></div>
+      </div>
+      <div id="camContent"></div>
+    </div>`;
+  renderTablesList();
+}
+
+window.stampaUltimaComanda=function(){
+  ['cucina','pizzeria','polleria'].forEach((role,i)=>{
+    const roleItems=lastSentItems.filter(it=>it.dest===role);
+    if(roleItems.length>0){
+      setTimeout(()=>printComanda(lastSentTableName,lastSentCovers,roleItems,role),i*500);
+    }
+  });
+  lastSentItems=[];
+  renderCameriere();
+};
+
+window.skipPrint=function(){
+  lastSentItems=[];
+  renderCameriere();
 };
 
 window.openEditTableModal=function(tid){editingTableId=tid;const t=tables[tid]||{};document.getElementById('etName').value=t.name||'';document.getElementById('etCovers').value=t.covers||4;document.getElementById('etNote').value=t.note||'';openModal('editTableModal');};
