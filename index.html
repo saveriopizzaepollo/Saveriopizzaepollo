@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -13,7 +12,7 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 #splash{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:#ffffff}
 .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:540px}
 .role-btn{background:#ffffff;border:2.5px solid #b8e4f0;border-radius:18px;padding:32px 16px;cursor:pointer;transition:all .2s;text-align:center;box-shadow:0 2px 16px rgba(26,155,187,.12);position:relative;overflow:hidden}
-.role-btn::before{content:’’;position:absolute;top:0;left:0;right:0;height:4px;background:#1a9bbb;transform:scaleX(0);transition:transform .2s;border-radius:18px 18px 0 0}
+.role-btn::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:#1a9bbb;transform:scaleX(0);transition:transform .2s;border-radius:18px 18px 0 0}
 .role-btn:hover::before,.role-btn:active::before{transform:scaleX(1)}
 .role-btn:hover,.role-btn:active{border-color:#1a9bbb;transform:translateY(-4px);box-shadow:0 6px 32px rgba(26,155,187,.18)}
 .role-btn .icon{font-size:3rem;margin-bottom:10px}
@@ -26,12 +25,12 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;align-items:center;justify-content:center;padding:16px}
 .modal-overlay.active{display:flex}
 .modal-box{background:#ffffff;border-radius:18px;padding:28px 22px;width:100%;max-width:460px;box-shadow:0 12px 48px rgba(0,0,0,.2);max-height:92vh;overflow-y:auto}
-.modal-box h3{font-family:‘Playfair Display’,serif;color:#0e7a9a;margin-bottom:16px;font-size:1.4rem}
-.modal-input{width:100%;padding:13px 15px;border:2.5px solid #b8e4f0;border-radius:12px;font-size:1rem;font-family:‘Nunito’,sans-serif;outline:none;transition:border-color .2s;background:#ffffff;color:#1a202c;margin-bottom:11px}
+.modal-box h3{font-family:'Playfair Display',serif;color:#0e7a9a;margin-bottom:16px;font-size:1.4rem}
+.modal-input{width:100%;padding:13px 15px;border:2.5px solid #b8e4f0;border-radius:12px;font-size:1rem;font-family:'Nunito',sans-serif;outline:none;transition:border-color .2s;background:#ffffff;color:#1a202c;margin-bottom:11px}
 .modal-input:focus{border-color:#1a9bbb}
 .modal-label{font-size:.88rem;font-weight:800;color:#2d3748;display:block;margin-bottom:5px}
 .btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-.btn{padding:14px 24px;border-radius:12px;border:none;cursor:pointer;font-family:“Nunito”,sans-serif;font-weight:800;font-size:1.05rem;transition:all .15s;white-space:nowrap}
+.btn{padding:14px 24px;border-radius:12px;border:none;cursor:pointer;font-family:"Nunito",sans-serif;font-weight:800;font-size:1.05rem;transition:all .15s;white-space:nowrap}
 .btn-primary{background:#1a9bbb;color:#1a202c}
 .btn-primary:hover{background:#0e7a9a}
 .btn-secondary{background:#f0f4f8;color:#2d3748}
@@ -44,10 +43,10 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 
 #app{display:none;flex-direction:column;min-height:100vh;background:#ffffff}
 .topbar{background:#ffffff;color:#1a202c;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(26,155,187,.1);position:sticky;top:0;z-index:100;border-bottom:3px solid #1a9bbb}
-.topbar-logo{font-family:‘Playfair Display’,serif;font-size:1.4rem;color:#0e7a9a}
+.topbar-logo{font-family:'Playfair Display',serif;font-size:1.4rem;color:#0e7a9a}
 .topbar-role{font-size:.78rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#4a5568;margin-top:2px}
 .topbar-btns{display:flex;gap:8px;align-items:center}
-.topbar-btn{background:#e8f7fb;border:2px solid #b8e4f0;color:#1a202c;padding:9px 16px;border-radius:10px;cursor:pointer;font-family:‘Nunito’,sans-serif;font-weight:700;font-size:.9rem;position:relative;transition:all .15s}
+.topbar-btn{background:#e8f7fb;border:2px solid #b8e4f0;color:#1a202c;padding:9px 16px;border-radius:10px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:.9rem;position:relative;transition:all .15s}
 .topbar-btn:hover{background:#b8e4f0;border-color:#1a9bbb}
 .notif-badge{position:absolute;top:-5px;right:-5px;background:#e53e3e;color:#ffffff;border-radius:50%;width:18px;height:18px;font-size:.62rem;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid #1a202c}
 .audio-btn-active{background:#22c55e!important;border-color:#16a34a!important;color:#ffffff!important}
@@ -65,11 +64,11 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 
 .tabs{display:flex;background:#ffffff;border-bottom:2.5px solid #b8e4f0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{padding:16px 22px;border:none;background:none;cursor:pointer;font-family:“Nunito”,sans-serif;font-weight:800;font-size:1.05rem;color:#2d3748;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2.5px;transition:all .15s}
+.tab{padding:16px 22px;border:none;background:none;cursor:pointer;font-family:"Nunito",sans-serif;font-weight:800;font-size:1.05rem;color:#2d3748;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2.5px;transition:all .15s}
 .tab.active{color:#0e7a9a;border-bottom-color:#1a9bbb}
 
 .content{flex:1;padding:16px;max-width:960px;margin:0 auto;width:100%}
-.section-title{font-family:“Playfair Display”,serif;font-size:1.35rem;color:#0e7a9a;margin-bottom:14px}
+.section-title{font-family:"Playfair Display",serif;font-size:1.35rem;color:#0e7a9a;margin-bottom:14px}
 .divider{border:none;border-top:2.5px solid #b8e4f0;margin:16px 0}
 .mt-12{margin-top:14px}
 
@@ -108,10 +107,10 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 
 .order-panel{background:#ffffff;border-radius:18px;box-shadow:0 2px 16px rgba(26,155,187,.12);overflow:hidden;border:2px solid #b8e4f0}
 .order-header{background:#e8f7fb;color:#1a202c;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:2px solid #b8e4f0}
-.order-header h2{font-family:‘Playfair Display’,serif;font-size:1.4rem;color:#0e7a9a}
+.order-header h2{font-family:'Playfair Display',serif;font-size:1.4rem;color:#0e7a9a}
 .order-body{padding:16px}
 .cat-tabs{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}
-.cat-btn{padding:12px 20px;border-radius:24px;border:2.5px solid #b8e4f0;background:#ffffff;cursor:pointer;font-family:“Nunito”,sans-serif;font-weight:800;font-size:1rem;color:#2d3748;transition:all .15s}
+.cat-btn{padding:12px 20px;border-radius:24px;border:2.5px solid #b8e4f0;background:#ffffff;cursor:pointer;font-family:"Nunito",sans-serif;font-weight:800;font-size:1rem;color:#2d3748;transition:all .15s}
 .cat-btn.active{background:#1a9bbb;border-color:#1a9bbb;color:#1a202c}
 .cat-btn:hover{border-color:#1a9bbb}
 .cat-btn.gf-cat{border-color:#22c55e;color:#22c55e;font-weight:900}
@@ -123,7 +122,7 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 .menu-item:hover{border-color:#1a9bbb;background:#e8f7fb}
 .menu-item.selected{border-color:#1a9bbb;border-width:3px;background:#e8f7fb;box-shadow:0 0 0 3px rgba(26,155,187,.18)}
 .menu-item.sold-out{opacity:.5;cursor:not-allowed;background:#f0f4f8}
-.menu-item.sold-out::after{content:‘ESAURITO’;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-12deg);font-size:.72rem;font-weight:900;color:#e53e3e;background:rgba(255,255,255,.95);padding:3px 9px;border-radius:6px;border:2px solid #e53e3e;pointer-events:none}
+.menu-item.sold-out::after{content:'ESAURITO';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-12deg);font-size:.72rem;font-weight:900;color:#e53e3e;background:rgba(255,255,255,.95);padding:3px 9px;border-radius:6px;border:2px solid #e53e3e;pointer-events:none}
 .mi-name{font-weight:900;font-size:1.1rem;color:#0e7a9a;text-transform:uppercase;letter-spacing:.3px}
 .mi-desc{font-size:.85rem;color:#2d3748;line-height:1.4;margin-top:3px}
 .mi-price{font-weight:900;color:#0e7a9a;font-size:1.05rem;margin-top:5px}
@@ -140,7 +139,7 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 .inline-qty-btn:hover{background:#1a9bbb;color:#1a202c}
 .inline-qty-display{font-size:1.4rem;font-weight:900;color:#1a202c;min-width:32px;text-align:center}
 .inline-qty-total{font-size:1rem;font-weight:900;color:#0e7a9a;margin-left:4px}
-.inline-note-input{width:100%;padding:10px 13px;border:2px solid #b8e4f0;border-radius:10px;font-family:‘Nunito’,sans-serif;font-size:.95rem;outline:none;background:#ffffff;color:#1a202c}
+.inline-note-input{width:100%;padding:10px 13px;border:2px solid #b8e4f0;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:#ffffff;color:#1a202c}
 .inline-note-input:focus{border-color:#1a9bbb}
 .inline-note-actions{display:flex;gap:8px;margin-top:10px}
 
@@ -183,7 +182,7 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 .kc-item:last-child{border-bottom:none}
 .kc-item-note{font-size:.88rem;color:#dd6b20;font-style:italic;font-weight:700;display:block;margin-top:3px;text-transform:none}
 .kc-foot{padding:12px 16px;display:flex;gap:10px;flex-wrap:wrap;border-top:2px solid #f0f4f8;align-items:center}
-.btn-pronto{background:#38a169;color:#ffffff;border:none;border-radius:14px;padding:14px 28px;font-family:‘Nunito’,sans-serif;font-weight:900;font-size:1.2rem;cursor:pointer;transition:all .15s;box-shadow:0 3px 12px rgba(56,161,105,.3)}
+.btn-pronto{background:#38a169;color:#ffffff;border:none;border-radius:14px;padding:14px 28px;font-family:'Nunito',sans-serif;font-weight:900;font-size:1.2rem;cursor:pointer;transition:all .15s;box-shadow:0 3px 12px rgba(56,161,105,.3)}
 .btn-pronto:hover{background:#22c55e;transform:scale(1.03)}
 
 .cassa-row{display:flex;align-items:center;background:#ffffff;border-radius:12px;padding:14px 16px;margin-bottom:10px;box-shadow:0 2px 16px rgba(26,155,187,.12);gap:12px;cursor:pointer;border:2.5px solid #b8e4f0;transition:all .15s}
@@ -197,7 +196,7 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 .bill-row:last-child{border-bottom:none}
 .bill-row-name{flex:1;font-size:.95rem;font-weight:700;color:#1a202c}
 .bill-row-note{font-size:.78rem;color:#4a5568;font-style:italic;display:block;margin-top:2px}
-.bill-price-input{width:75px;padding:6px 9px;border:2.5px solid #b8e4f0;border-radius:8px;font-family:‘Nunito’,sans-serif;font-size:.92rem;font-weight:800;text-align:right;color:#1a202c;background:#ffffff;outline:none}
+.bill-price-input{width:75px;padding:6px 9px;border:2.5px solid #b8e4f0;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.92rem;font-weight:800;text-align:right;color:#1a202c;background:#ffffff;outline:none}
 .bill-price-input:focus{border-color:#1a9bbb}
 .bill-total-row{display:flex;justify-content:space-between;font-size:1.25rem;font-weight:900;padding-top:12px;color:#1a202c}
 .pay-btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
@@ -222,8 +221,8 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 .storico-time{font-size:.78rem;color:#4a5568;flex-shrink:0}
 
 .settings-section{margin-bottom:24px}
-.settings-section h3{font-family:‘Playfair Display’,serif;color:#0e7a9a;font-size:1.2rem;margin-bottom:12px;padding-bottom:8px;border-bottom:2.5px solid #b8e4f0}
-.s-input{flex:1;min-width:100px;padding:11px 14px;border:2.5px solid #b8e4f0;border-radius:12px;font-family:‘Nunito’,sans-serif;font-size:.95rem;outline:none;background:#ffffff;color:#1a202c}
+.settings-section h3{font-family:'Playfair Display',serif;color:#0e7a9a;font-size:1.2rem;margin-bottom:12px;padding-bottom:8px;border-bottom:2.5px solid #b8e4f0}
+.s-input{flex:1;min-width:100px;padding:11px 14px;border:2.5px solid #b8e4f0;border-radius:12px;font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;background:#ffffff;color:#1a202c}
 .s-input:focus{border-color:#1a9bbb}
 .s-row{display:flex;gap:9px;align-items:center;margin-bottom:9px;flex-wrap:wrap}
 .table-s-item{display:flex;align-items:center;gap:9px;background:#ffffff;border-radius:12px;padding:12px 15px;margin-bottom:9px;box-shadow:0 2px 16px rgba(26,155,187,.12);border:2px solid #b8e4f0}
@@ -243,7 +242,6 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 ::-webkit-scrollbar-track{background:#e8f7fb}
 ::-webkit-scrollbar-thumb{background:#b8e4f0;border-radius:3px}
 </style>
-
 </head>
 <body>
 
@@ -266,7 +264,6 @@ body{font-family:'Nunito',sans-serif;background:#ffffff;color:#1a202c;min-height
 <div class="ready-notification" id="readyNotification"></div>
 
 <!-- Modali -->
-
 <div class="modal-overlay" id="passModal">
   <div class="modal-box">
     <h3>🔐 Accesso Cassa</h3>
@@ -1078,6 +1075,129 @@ window.addQty=function(i){const td=getDraft(selectedTable);if(td[i])td[i].qty=(t
 window.goTables=function(){selectedTable=null;camTab='tables';selectedMenuItem=null;inlineQty=1;updateCartBadge();renderCameriere();};
 window.clearTable=async function(){if(!confirm('Svuotare il tavolo?'))return;await remove(ref(db,`orders/${selectedTable}`));clearDraft(selectedTable);showToast('Tavolo svuotato');goTables();};
 
+// ── STAMPA ESC/POS via RawBT ──────────────────────────────────
+function escPos(){
+  const ESC='\x1B',GS='\x1D';
+  return{
+    init:()=>ESC+'@',
+    cut:()=>GS+'V'+'\x41'+'\x00',
+    feed:(n=4)=>ESC+'d'+String.fromCharCode(n),
+    bold:(on)=>ESC+'E'+(on?'\x01':'\x00'),
+    align:(a)=>ESC+'a'+(a==='center'?'\x01':a==='right'?'\x02':'\x00'),
+    size:(w,h)=>GS+'!'+(String.fromCharCode(((w-1)<<4)|(h-1))),
+    normal:()=>GS+'!'+'\x00',
+    text:(t)=>t+'\n',
+  };
+}
+
+// Spezza testo lungo rispettando le parole (no tagli a metà parola)
+function wrapText(text,maxChars){
+  const words=text.split(' ');
+  const lines=[];
+  let current='';
+  words.forEach(word=>{
+    if((current+' '+word).trim().length<=maxChars){
+      current=(current+' '+word).trim();
+    }else{
+      if(current)lines.push(current);
+      current=word;
+    }
+  });
+  if(current)lines.push(current);
+  return lines;
+}
+
+function printComanda(tableName,covers,items,dest){
+  try{
+    const e=escPos();
+    let data='';
+    const CHARS_NORMAL=48;// caratteri per riga a dimensione normale
+    const CHARS_LARGE=24;// caratteri per riga a doppia larghezza
+
+    // Init
+    data+=e.init();
+
+    // Nome tavolo — grande e grassetto centrato
+    data+=e.align('center');
+    data+=e.bold(true);
+    data+=e.size(2,2);
+    data+=e.text(tableName.toUpperCase());
+
+    // Coperti — piccolo centrato
+    data+=e.size(1,1);
+    data+=e.bold(false);
+    data+=e.text('Coperti: '+covers);
+
+    // Stazione destinazione
+    const destLabel={cucina:'-- CUCINA --',pizzeria:'-- PIZZERIA --',polleria:'-- POLLERIA --'};
+    data+=e.bold(true);
+    data+=e.text(destLabel[dest]||dest.toUpperCase());
+    data+=e.bold(false);
+
+    // Separatore
+    data+=e.text('--------------------------------');
+
+    // Articoli
+    data+=e.align('left');
+    items.forEach(it=>{
+      const qty=it.qty||1;
+      const qtyStr='x'+qty+' ';
+      const qtyLen=qtyStr.length;
+      const maxName=CHARS_LARGE-qtyLen;// spazio disponibile per nome con doppia larghezza
+
+      // Quantità — normale
+      data+=e.normal();
+      data+=e.bold(true);
+      data+=e.size(1,2);// solo altezza doppia per quantità
+      data+=qtyStr;
+
+      // Nome prodotto — doppia altezza e larghezza, va a capo rispettando le parole
+      data+=e.size(2,2);
+      const nameLines=wrapText(it.name.toUpperCase(),maxName);
+      nameLines.forEach((line,i)=>{
+        if(i===0){
+          data+=line+'\n';
+        }else{
+          // righe successive indentate della larghezza della quantità
+          data+=e.size(2,2);
+          data+=e.align('left');
+          data+=' '.repeat(qtyLen)+line+'\n';
+        }
+      });
+
+      // Nota se presente
+      if(it.note){
+        data+=e.size(1,1);
+        data+=e.bold(false);
+        data+='  >> '+it.note.toUpperCase()+'\n';
+        data+=e.bold(true);
+      }
+    });
+
+    // Separatore finale
+    data+=e.normal();
+    data+=e.bold(false);
+    data+=e.align('center');
+    data+=e.text('--------------------------------');
+
+    // Orario
+    const now=new Date();
+    const timeStr=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    data+=e.size(1,1);
+    data+=e.text(timeStr);
+
+    // Feed e taglio
+    data+=e.feed(4);
+    data+=e.cut();
+
+    // Converti in base64 e apri RawBT
+    const b64=btoa(unescape(encodeURIComponent(data)));
+    window.location.href='rawbt:base64,'+b64;
+  }catch(err){
+    console.error('Errore stampa ESC/POS:',err);
+  }
+}
+
 window.sendOrder=async function(){
   const tempOrder=getDraft(selectedTable);
   if(!tempOrder.length){showToast('Aggiungi almeno un articolo!');return;}
@@ -1095,6 +1215,17 @@ window.sendOrder=async function(){
   });
   await set(ref(db,`orders/${selectedTable}`),{tableId:selectedTable,tableName:tables[selectedTable]?.name||'',items:merged,status:'pending',timestamp:existing?.timestamp||Date.now(),covers:tables[selectedTable]?.covers||1,newItems:true,stationColors:sc});
   playWhoosh();clearDraft(selectedTable);
+
+  // Stampa comanda per ogni stazione coinvolta nei nuovi articoli
+  const tableName=tables[selectedTable]?.name||selectedTable;
+  const covers=tables[selectedTable]?.covers||1;
+  ['cucina','pizzeria','polleria'].forEach(role=>{
+    const roleItems=newItems.filter(it=>it.dest===role);
+    if(roleItems.length>0){
+      setTimeout(()=>printComanda(tableName,covers,roleItems,role),300);
+    }
+  });
+
   showToast(`✅ ${existingItems.length?'Aggiunta inviata!':'Ordine inviato!'}`);
   goTables();
 };
@@ -1447,6 +1578,5 @@ window.sendChat=async function(){const inp=document.getElementById('chatInput');
 function scheduleReset(){const now=new Date(),mid=new Date(now);mid.setHours(24,0,0,0);setTimeout(async()=>{await set(ref(db,'dailyStats'),{totalRevenue:0,tablesPaid:0,payments:[]});scheduleReset();},mid-now);}
 scheduleReset();
 </script>
-
 </body>
 </html>
