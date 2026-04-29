@@ -1107,12 +1107,10 @@ function wrapText(text,maxChars){
   return lines;
 }
 
-function printComanda(tableName,covers,items,dest){
+function printComanda(tableName,covers,allItems){
   try{
     const e=escPos();
     let data='';
-    const CHARS_NORMAL=48;// caratteri per riga a dimensione normale
-    const CHARS_LARGE=24;// caratteri per riga a doppia larghezza
 
     // Init
     data+=e.init();
@@ -1128,63 +1126,64 @@ function printComanda(tableName,covers,items,dest){
     data+=e.bold(false);
     data+=e.text('Coperti: '+covers);
 
-    // Stazione destinazione
+    // Orario
+    const now=new Date();
+    const timeStr=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    data+=e.text(timeStr);
+
+    // Stampa articoli per stazione
+    const stazioni=['cucina','pizzeria','polleria'];
     const destLabel={cucina:'-- CUCINA --',pizzeria:'-- PIZZERIA --',polleria:'-- POLLERIA --'};
-    data+=e.bold(true);
-    data+=e.text(destLabel[dest]||dest.toUpperCase());
-    data+=e.bold(false);
 
-    // Separatore
-    data+=e.text('--------------------------------');
+    stazioni.forEach(role=>{
+      const items=allItems.filter(it=>it.dest===role);
+      if(!items.length)return;
 
-    // Articoli
-    data+=e.align('left');
-    items.forEach(it=>{
-      const qty=it.qty||1;
-      const qtyStr='x'+qty+' ';
-      const qtyLen=qtyStr.length;
-      const maxName=CHARS_LARGE-qtyLen;// spazio disponibile per nome con doppia larghezza
-
-      // Quantità — normale
-      data+=e.normal();
+      // Separatore + nome stazione
+      data+=e.align('center');
       data+=e.bold(true);
-      data+=e.size(1,2);// solo altezza doppia per quantità
-      data+=qtyStr;
+      data+=e.size(1,1);
+      data+=e.text('--------------------------------');
+      data+=e.text(destLabel[role]);
+      data+=e.text('--------------------------------');
 
-      // Nome prodotto — doppia altezza e larghezza, va a capo rispettando le parole
-      data+=e.size(2,2);
-      const nameLines=wrapText(it.name.toUpperCase(),maxName);
-      nameLines.forEach((line,i)=>{
-        if(i===0){
-          data+=line+'\n';
-        }else{
-          // righe successive indentate della larghezza della quantità
-          data+=e.size(2,2);
-          data+=e.align('left');
-          data+=' '.repeat(qtyLen)+line+'\n';
+      // Articoli
+      data+=e.align('left');
+      items.forEach(it=>{
+        const qty=it.qty||1;
+        const qtyStr='x'+qty+' ';
+        const qtyLen=qtyStr.length;
+        const maxName=24-qtyLen;
+
+        // Quantità normale
+        data+=e.size(1,1);
+        data+=e.bold(true);
+        data+=qtyStr;
+
+        // Nome prodotto doppia larghezza e altezza
+        data+=e.size(2,2);
+        const nameLines=wrapText(it.name.toUpperCase(),maxName);
+        nameLines.forEach((line,i)=>{
+          if(i===0){data+=line+'\n';}
+          else{data+=e.size(2,2);data+=' '.repeat(qtyLen)+line+'\n';}
+        });
+
+        // Nota se presente
+        if(it.note){
+          data+=e.size(1,1);
+          data+=e.bold(false);
+          data+='  >> '+it.note.toUpperCase()+'\n';
+          data+=e.bold(true);
         }
       });
-
-      // Nota se presente
-      if(it.note){
-        data+=e.size(1,1);
-        data+=e.bold(false);
-        data+='  >> '+it.note.toUpperCase()+'\n';
-        data+=e.bold(true);
-      }
     });
 
     // Separatore finale
     data+=e.normal();
     data+=e.bold(false);
     data+=e.align('center');
-    data+=e.text('--------------------------------');
-
-    // Orario
-    const now=new Date();
-    const timeStr=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
     data+=e.size(1,1);
-    data+=e.text(timeStr);
+    data+=e.text('--------------------------------');
 
     // Feed e taglio
     data+=e.feed(4);
@@ -1250,12 +1249,7 @@ function renderCameriereWithPrint(){
 }
 
 window.stampaUltimaComanda=function(){
-  ['cucina','pizzeria','polleria'].forEach((role,i)=>{
-    const roleItems=lastSentItems.filter(it=>it.dest===role);
-    if(roleItems.length>0){
-      setTimeout(()=>printComanda(lastSentTableName,lastSentCovers,roleItems,role),i*500);
-    }
-  });
+  printComanda(lastSentTableName,lastSentCovers,lastSentItems);
   lastSentItems=[];
   renderCameriere();
 };
